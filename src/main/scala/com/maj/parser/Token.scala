@@ -11,8 +11,8 @@ object Token {
   }
 
   val WHITESPACE = "[ \\n\\r\\t]+".regexp
-  val COMMENTS = "//.*/".regexp.or(() => "/*.*[*]/".regexp)
-  val IGNORED = () => Parser.zeroOrMore(WHITESPACE.or(() => COMMENTS))
+  val COMMENTS = "//.*/".regexp.or("/*.*[*]/".regexp)
+  val IGNORED = () => Parser.zeroOrMore(WHITESPACE.or(COMMENTS))
 
   def clean(pattern: String) = {
     pattern.regexp.bind(value => {
@@ -50,13 +50,13 @@ object Token {
   val DIV: Parser[Operator] = clean("\\/").map(_ => Div())
 
   val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  val scalar = NUMBER.or(() => id).or(() => call)
+  val scalar = NUMBER.or(id).or(call)
   var expression = scalar
 
   val arguments = expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(() => expression)).bind(args => {
       Parser.constant(arg :: args)
-    }).or(() => Parser.constant(List.empty))
+    }).or(Parser.constant(List.empty))
   })
 
   val call: Parser[ASTNode] = ID.bind(name => {
@@ -65,18 +65,18 @@ object Token {
     })
   })
 
-  expression = expression.or(() => LEFT_PAREN.bind(par => {
+  expression = (LEFT_PAREN.bind(par => {
     expression.bind(
       expr => {
         RIGHT_PAREN.and(() => Parser.constant(expr))
       })
-  }))
+  })).or(expression)
 
 
   val unary: Parser[ASTNode] = NOT.bind((not) =>
     expression.bind((exp) => Parser.constant(not.get(exp)))
   )
-  expression = expression.or(() => unary)
+  expression = unary.or(expression)
 
   val infix = (operator: Parser[Operator], operandFn: () => Parser[ASTNode]) => {
     val operand = operandFn
@@ -96,10 +96,10 @@ object Token {
     })
   }
 
-  val product = infix(MUL.or(() => DIV), () => expression)
-  expression = product.or(() => expression)
-  val sum = infix(ADD.or(() => SUB), () => expression)
-  expression = sum.or(() => expression)
-  val comparison = infix(EQUAL.or(() => NOT_EQUAL), () => expression)
-  expression = comparison.or(() => expression)
+  val product = infix(MUL.or(DIV), () => expression)
+  expression = product.or(expression)
+  val sum = infix(ADD.or(SUB), () => expression)
+  expression = sum.or(expression)
+  val comparison = infix(EQUAL.or(NOT_EQUAL), () => expression)
+  expression = comparison.or(expression)
 }

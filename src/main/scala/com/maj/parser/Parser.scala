@@ -7,10 +7,10 @@ case class ParseResult[+T](val value: T, val source: Source)
 case class Parser[T](val parse: Source => Option[ParseResult[T]]) {
   def apply(): Parser[T] = this
 
-  def or(parser: () => Parser[T]): Parser[T] = {
+  def or(parser: Parser[T]): Parser[T] = {
     new Parser(source => {
       val result = parse(source);
-      result.orElse(parser().parse(source))
+      result.orElse(parser.parse(source))
     })
   }
 
