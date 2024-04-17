@@ -1,0 +1,7 @@
+func adam() {
+    if(zesty == 0) {
+        print(zesty);
+    }else{
+        adam();
+    }
+}

@@ -6,14 +6,14 @@ case class Source(val input: String, val index: Int) {
   def check(regex: Regex): Option[ParseResult[String]] = {
     val matcher = regex.pattern.matcher(input)
     matcher.region(index, input.length)
-    println(s"tried: $regex")
+    println(s"\ntried: $regex")
     println(s"source: $this")
 
     if (matcher.lookingAt()) {
       val value = matcher.group()
       val newIndex = index + value.length
       val source = new Source(input, newIndex)
-      println(s"matched: $value")
+      println(s"matched: $value\n")
       Some(ParseResult(value, source))
     } else {
       None

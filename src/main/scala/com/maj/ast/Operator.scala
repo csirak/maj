@@ -5,8 +5,6 @@ abstract class Operator extends ASTNode {
   override def equals(node: ASTNode): Boolean = false
 
   def get(left: ASTNode, right: ASTNode): Operator
-
-
 }
 
 case class Not(val node: ASTNode = null) extends ASTNode {
