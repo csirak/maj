@@ -118,7 +118,7 @@ object Token {
   })
 
 
-  private val blockStatement = (statement: Parser[ASTNode]) => LEFT_CURLY.and(Parser.zeroOrMore(statement).bind(body => {
+  lazy private val blockStatement = (statement: Parser[ASTNode]) => LEFT_CURLY.and(Parser.zeroOrMore(statement).bind(body => {
     RIGHT_CURLY.and(Parser.constant(Block(body)))
   }))
 
@@ -163,7 +163,7 @@ object Token {
     })
   }).or(Parser.constant(List.empty))
 
-  lazy private val functionStatement = FUNCTION.and(ID.bind(name => {
+  lazy private val functionStatement = (statement: Parser[ASTNode]) => FUNCTION.and(ID.bind(name => {
     LEFT_PAREN.and(paramsStatement).bind(params => {
       RIGHT_PAREN.and(blockStatement(statement)).bind(body => {
         if (name == "main") Parser.constant(Main(body))
@@ -172,7 +172,7 @@ object Token {
     })
   }))
 
-  statement = functionStatement.or(statement)
+  statement = functionStatement(statement).or(statement)
 
   lazy val parser: Parser[Block] = IGNORED.and(Parser.zeroOrMore(statement)).bind(body => {
     Parser.constant(Block(body))
