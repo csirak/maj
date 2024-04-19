@@ -42,26 +42,27 @@ object Token {
 
   private val ID = clean("[a-zA-Z_][a-zA-Z0-9_]*")
 
-  private val NOT: Parser[Not] = clean("!").map(_ => Not())
+  private val NOT: Parser[Not] = clean("\\!").map(_ => Not())
   private val EQUAL: Parser[Operator] = clean("==").map(_ => Equals())
   private val NOT_EQUAL: Parser[Operator] = clean("!=").map(_ => NotEquals())
   private val ADD: Parser[Operator] = clean("\\+").map(_ => Add())
   private val SUB: Parser[Operator] = clean("\\-").map(_ => Sub())
   private val MUL: Parser[Operator] = clean("\\*").map(_ => Mul())
   private val DIV: Parser[Operator] = clean("\\/").map(_ => Div())
+  private val MOD: Parser[Operator] = clean("\\%").map(_ => Mod())
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  var expression = id.or(NUMBER)
+  private var expression: Parser[ASTNode] = id.or(NUMBER)
 
-  private val arguments = expression.bind(arg => {
+  private val arguments = (expression: Parser[ASTNode]) => expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(expression)).bind(args => {
       Parser.constant(arg :: args)
     }).or(Parser.constant(List.empty))
   })
 
   private val call: Parser[ASTNode] = ID.bind(name => {
-    LEFT_PAREN.bind(_ => arguments.bind(args => {
-      RIGHT_PAREN.and(Parser.constant(Call(name, args)))
+    LEFT_PAREN.bind(_ => arguments(expression).bind(args => {
+      RIGHT_PAREN.and(if (name == "assert") Parser.constant(Assert(args.head)) else Parser.constant(Call(name, args)))
     }).or(RIGHT_PAREN.and(Parser.constant(Call(name, List.empty)))))
   })
 
@@ -73,7 +74,6 @@ object Token {
         RIGHT_PAREN.and(Parser.constant(expr))
       })
   }).or(expression)
-
 
   private val unary: Parser[ASTNode] = NOT.bind((not) =>
     expression.bind((exp) => Parser.constant(not.get(exp)))
@@ -97,7 +97,7 @@ object Token {
     })
   }
 
-  private val product = infix(MUL.or(DIV), expression)
+  private val product = infix(MUL.or(DIV).or(MOD), expression)
   expression = product.or(expression)
   private val sum = infix(ADD.or(SUB), expression)
   expression = sum.or(expression)
@@ -122,7 +122,7 @@ object Token {
     RIGHT_CURLY.and(Parser.constant(Block(body)))
   }))
 
-  var statement: Parser[ASTNode] = (varStatement).or(assignStatement).or(expressionStatement).or(returnStatement).or(blockStatement(statement))
+  private var statement: Parser[ASTNode] = (varStatement).or(assignStatement).or(expressionStatement).or(returnStatement).or(blockStatement(statement))
 
 
   lazy private val elseStatement: Parser[ASTNode] = ELSE.and(blockStatement(statement).bind(block => {
@@ -141,7 +141,6 @@ object Token {
   lazy private val ifStatement: Parser[ASTNode] = IF.and(LEFT_PAREN).bind(_ => expression.bind(cond => {
     RIGHT_PAREN.and(blockStatement(statement).bind(block => {
       elseStatement.bind(statement => {
-        println(statement)
         Parser.constant(Conditional(cond, block, Some(statement)))
       }).or(Parser.constant(Conditional(cond, block, None)))
     }))
@@ -167,7 +166,8 @@ object Token {
   lazy private val functionStatement = FUNCTION.and(ID.bind(name => {
     LEFT_PAREN.and(paramsStatement).bind(params => {
       RIGHT_PAREN.and(blockStatement(statement)).bind(body => {
-        Parser.constant(Function(name, params, body))
+        if (name == "main") Parser.constant(Main(body))
+        else Parser.constant(Function(name, params, body))
       })
     })
   }))

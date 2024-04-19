@@ -2,18 +2,21 @@ package com.maj.parser
 
 import scala.util.matching.Regex
 
-case class Source(val input: String, val index: Int) {
+case class Source(val input: String, val index: Int, log: Boolean = false) {
+
   def check(regex: Regex): Option[ParseResult[String]] = {
     val matcher = regex.pattern.matcher(input)
     matcher.region(index, input.length)
-    println(s"\ntried: $regex")
-    println(s"source: $this")
+    if (log) {
+      println(s"\ntried: $regex")
+      println(s"source: $this")
+    }
 
     if (matcher.lookingAt()) {
       val value = matcher.group()
       val newIndex = index + value.length
       val source = new Source(input, newIndex)
-      println(s"matched: $value\n")
+      if (log) println(s"matched: $value\n")
       Some(ParseResult(value, source))
     } else {
       None
@@ -21,24 +24,9 @@ case class Source(val input: String, val index: Int) {
 
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     s"\"${input.substring(index)}\""
   }
 
   def atEnd(): Boolean = input.length == index
 }
-
-//Some(
-//  ParseResult(
-//    (
-//      Numeric(2),
-//      List(
-//        (
-//          *,
-//          Numeric(2)
-//        )
-//      )
-//    ),
-//    ""
-//  )
-//)
