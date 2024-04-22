@@ -11,16 +11,8 @@ _start:
 
         la    sp, stack_top           # setup stack pointer
 
-		li a0, 4
+		li a0, 6
 		jal fact
-		addi sp, sp, -8
-		sd a0, 8(sp)
-		li a0, 24
-		ld a1, 8(sp)
-		addi sp, sp, 8
-		xor a0, a0, a1
-		seqz a0, a0
-		jal assert
 
         j    halt                 # load newline character
 
@@ -58,43 +50,35 @@ fact:
 		mv fp, sp
 		addi sp, sp, -8
 		sd a0, 0(sp)
-		ld a0, -8(fp)
-		addi sp, sp, -8
-		sd a0, 8(sp)
-		li a0, 1
-		ld a1, 8(sp)
-		addi sp, sp, 8
-		addi a0, a0, 1
-		slt a0, a1, a0
-		beqz a0, .L1
-		li a0, 1
-		mv sp, fp
-		ld ra, 8(sp)
-		ld fp, 0(sp)
-		addi sp, sp, 16
-		ret
-		j .L2
-.L1:
+		j .L1
 .L2:
 		ld a0, -8(fp)
 		addi sp, sp, -8
-		sd a0, 8(sp)
+		sd a0, 0(sp)
+		li a0, 48
+		ld a1, 0(sp)
+		addi sp, sp, 8
+		add a0, a0, a1
+		jal putchar
 		ld a0, -8(fp)
 		addi sp, sp, -8
-		sd a0, 8(sp)
+		sd a0, 0(sp)
 		li a0, 1
-		ld a1, 8(sp)
+		ld a1, 0(sp)
 		addi sp, sp, 8
 		sub a0, a1, a0
-		jal fact
-		ld a1, 8(sp)
+		sd a0, -8(fp)
+.L1:
+		ld a0, -8(fp)
+		addi sp, sp, -8
+		sd a0, 0(sp)
+		li a0, 1
+		ld a1, 0(sp)
 		addi sp, sp, 8
-		mul a0, a0, a1
-		mv sp, fp
-		ld ra, 8(sp)
-		ld fp, 0(sp)
-		addi sp, sp, 16
-		ret
+		addi a1, a1, 1
+		slt a0, a0, a1
+		seqz a0, a0
+		beqz a0, .L2
 		addi sp, sp, 8
 		ld ra, 8(fp)
 		ld fp, 0(fp)

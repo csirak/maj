@@ -1,11 +1,11 @@
 func main() {
-   assert(fact(4) == 24);
+    fact(6);
 }
 
 func fact(n) {
-    if (n <= 1) {
-        return 1;
-    }
+   while (n >= 1) {
+       putchar(n+48);
+       n = n - 1;
+   }
 
-   return (n * fact(n-1));
 }

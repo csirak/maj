@@ -1,11 +1,17 @@
 package com.maj.codegen
 
-case class Environment() {
+case class Environment(var localOffset: Int = 0) {
   private var locals: Map[String, Int] = Map()
 
   def addLocal(name: String, offset: Int): Unit = {
-    locals += (name -> offset)
+    locals += (name -> (offset))
   }
+
+  def addLocalWithOffset(name: String, offset: Int): Unit = {
+    localOffset += offset
+    locals += (name -> (localOffset))
+  }
+
 
   def get(name: String): Int = locals.getOrElse(name, -1)
 }

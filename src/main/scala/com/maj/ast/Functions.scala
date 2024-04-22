@@ -85,6 +85,7 @@ case class Function(val name: String, val params: List[String], val body: ASTNod
         env.addLocal(param, paramOffset(index))
       }
     }
+    env.localOffset = stackOffsetDepth
     env
   }
 

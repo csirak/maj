@@ -13,9 +13,9 @@ abstract class Operator extends ASTNode {
   override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
     left.emit(env)
     emitter.emitLine("addi sp, sp, -8")
-    emitter.emitLine("sd a0, 8(sp)")
+    emitter.emitLine("sd a0, 0(sp)")
     right.emit(env)
-    emitter.emitLine("ld a1, 8(sp)")
+    emitter.emitLine("ld a1, 0(sp)")
     emitter.emitLine("addi sp, sp, 8")
   }
 
