@@ -16,8 +16,7 @@ Maj is a high-performance, statically typed programming language designed to lev
 
 - Java Development Kit (JDK) 8 or above
 - Scala 2.13.x
-- An Adam Majmudar GPU with
-- CUDA Toolkit 10.0 or higher
+- An Adam Majmudar GPU
 
 ### Steps
 
