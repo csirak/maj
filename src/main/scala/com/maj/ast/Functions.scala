@@ -1,5 +1,7 @@
 package com.maj.ast
 
+import com.maj.codegen.Environment
+
 case class Call(val callee: String, val args: List[ASTNode]) extends ASTNode {
   override def equals(node: ASTNode): Boolean = {
     node match {
@@ -12,24 +14,24 @@ case class Call(val callee: String, val args: List[ASTNode]) extends ASTNode {
     }
   }
 
-  override def emit(implicit emitter: Emitter): Unit = {
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
     if (args.length <= 1) {
-      args.foreach(_.emit)
-      emitter.emitLine(s"call $callee")
+      args.foreach(_.emit(env))
+      emitter.emitLine(s"jal $callee")
     } else if (args.length <= 7) {
-      emitter.emitLine(s"addi sp, sp, -${args.length * 4}")
+      emitter.emitLine(s"addi sp, sp, -${args.length * 8}")
       args.zipWithIndex.foreach {
         case (arg, index) => {
-          arg.emit
-          emitter.emitLine(s"sw a0, ${index * 4}(sp)")
+          arg.emit(env)
+          emitter.emitLine(s"sd a0, ${index * 8}(sp)")
         }
       }
       for (index <- args.indices) {
-        emitter.emitLine(s"lw a$index, ${index * 4}(sp)")
+        emitter.emitLine(s"ld a$index, ${index * 8}(sp)")
       }
-      emitter.emitLine(s"addi sp, sp, ${args.length * 4}")
+      emitter.emitLine(s"addi sp, sp, ${args.length * 8}")
 
-      emitter.emitLine(s"call $callee")
+      emitter.emitLine(s"jal $callee")
     } else {
       throw new RuntimeException("Too many arguments")
     }
@@ -38,6 +40,16 @@ case class Call(val callee: String, val args: List[ASTNode]) extends ASTNode {
 
 case class Return(val term: ASTNode) extends ASTNode {
   override def equals(node: ASTNode): Boolean = false
+
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
+    this.term.emit(env)
+    emitter.emitLine("mv sp, fp")
+    emitter.emitLine("ld ra, 8(sp)")
+    emitter.emitLine("ld fp, 0(sp)")
+    emitter.emitLine("addi sp, sp, 16")
+    emitter.emitLine("ret")
+
+  }
 }
 
 case class Block(val statements: List[ASTNode]) extends ASTNode {
@@ -45,17 +57,73 @@ case class Block(val statements: List[ASTNode]) extends ASTNode {
 
   override def toString: String = s"Block{\n${statements.map(_.toString).mkString("\t")}\n}"
 
-  override def emit(implicit emitter: Emitter): Unit = statements.foreach(_.emit)
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = statements.foreach(_.emit(env))
 }
 
 case class Function(val name: String, val params: List[String], val body: ASTNode) extends ASTNode {
+  private val stackOffsetDepth = 8 * params.length
+
   override def equals(node: ASTNode): Boolean = false
+
+  override def emit(unUsed: Environment)(implicit emitter: Emitter): Unit = {
+    if (params.length > 7) {
+      throw new RuntimeException("Too many arguments")
+    }
+    val env = setupEnv()
+    emitter.emitLine(s"")
+    emitter.emit(s".global $name")
+    emitter.emit(s"$name:")
+    emitPrologue
+    body.emit(env)
+    emitEpilogue
+  }
+
+  private def setupEnv(): Environment = {
+    val env = new Environment()
+    params.zipWithIndex.foreach {
+      case (param, index) => {
+        env.addLocal(param, paramOffset(index))
+      }
+    }
+    env
+  }
+
+  private def paramOffset(index: Int): Int = {
+    stackOffsetDepth - index * 8
+  }
+
+  private def emitPrologue(implicit emitter: Emitter): Unit = {
+    emitter.emitLine("addi sp, sp, -16")
+    emitter.emitLine("sd ra, 8(sp)")
+    emitter.emitLine("sd fp, 0(sp)")
+    emitter.emitLine("mv fp, sp")
+
+    emitter.emitLine(s"addi sp, sp, -$stackOffsetDepth")
+    params.indices.foreach((index) => {
+      emitter.emitLine(s"sd a$index, ${stackOffsetDepth - paramOffset(index)}(sp)")
+    })
+  }
+
+  private def emitEpilogue(implicit emitter: Emitter): Unit = {
+    emitter.emitLine(s"addi sp, sp, $stackOffsetDepth")
+    emitter.emitLine("ld ra, 8(fp)")
+    emitter.emitLine("ld fp, 0(fp)")
+    emitter.emitLine("addi sp, sp, 16")
+    emitter.emitLine("ret")
+  }
 }
 
 case class Main(val body: Block) extends ASTNode {
   override def equals(node: ASTNode): Boolean = false
 
-  override def emit(implicit emitter: Emitter): Unit = {
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
+    emitPrologue
+    body.emit(env)
+    emitEpilogue
+
+  }
+
+  private def emitPrologue(implicit emitter: Emitter): Unit = {
     emitter.emit(
       """
         |.align 2
@@ -70,8 +138,9 @@ case class Main(val body: Block) extends ASTNode {
         |
         |        la    sp, stack_top           # setup stack pointer
         |""".stripMargin)
-    body.emit
+  }
 
+  private def emitEpilogue(implicit emitter: Emitter): Unit = {
     emitter.emit(
       """
         |        j    halt                 # load newline character
@@ -101,15 +170,14 @@ case class Main(val body: Block) extends ASTNode {
         |        li a1, 0x5555
         |        sw a1, 0(a0)
         |""".stripMargin)
-
   }
 }
 
 case class Assert(val condition: ASTNode) extends ASTNode {
   override def equals(node: ASTNode): Boolean = false
 
-  override def emit(implicit emitter: Emitter): Unit = {
-    condition.emit
-    emitter.emitLine("call assert")
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
+    condition.emit(env)
+    emitter.emitLine("jal assert")
   }
 }

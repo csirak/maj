@@ -1,20 +1,20 @@
 package com.maj.ast
 
-import com.maj.codegen.Label
+import com.maj.codegen.{Environment, Label}
 
 case class Conditional(val condition: ASTNode, val ifTrue: ASTNode, val elseIfTrue: Option[ASTNode] = None) extends ASTNode {
   override def equals(node: ASTNode): Boolean = false
 
-  override def emit(implicit emitter: Emitter): Unit = {
+  override def emit(env: Environment)(implicit emitter: Emitter): Unit = {
     val ifFalseLabel = Label.next
     val endLabel = Label.next
-    this.condition.emit
+    this.condition.emit(env)
     emitter.emitLine(s"beqz a0, $ifFalseLabel")
-    ifTrue.emit
+    ifTrue.emit(env)
     emitter.emitLine(s"j $endLabel")
-    emitter.emitLine(s"$ifFalseLabel:")
-    this.elseIfTrue.foreach(_.emit)
-    emitter.emitLine(s"$endLabel:")
+    emitter.emit(s"$ifFalseLabel:")
+    this.elseIfTrue.foreach(_.emit(env))
+    emitter.emit(s"$endLabel:")
 
   }
 }

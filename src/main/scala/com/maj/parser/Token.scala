@@ -43,8 +43,14 @@ object Token {
   private val ID = clean("[a-zA-Z_][a-zA-Z0-9_]*")
 
   private val NOT: Parser[Not] = clean("\\!").map(_ => Not())
+
   private val EQUAL: Parser[Operator] = clean("==").map(_ => Equals())
+  private val GTOREQ: Parser[Operator] = clean(">=").map(_ => GreaterThanOrEquals())
+  private val LTOREQ: Parser[Operator] = clean("<=").map(_ => LessThanOrEquals())
+  private val GREATER: Parser[Operator] = clean(">").map(_ => GreaterThan())
+  private val LESS: Parser[Operator] = clean("<").map(_ => LessThan())
   private val NOT_EQUAL: Parser[Operator] = clean("!=").map(_ => NotEquals())
+
   private val ADD: Parser[Operator] = clean("\\+").map(_ => Add())
   private val SUB: Parser[Operator] = clean("\\-").map(_ => Sub())
   private val MUL: Parser[Operator] = clean("\\*").map(_ => Mul())
@@ -101,28 +107,32 @@ object Token {
   expression = product.or(expression)
   private val sum = infix(ADD.or(SUB), expression)
   expression = sum.or(expression)
-  private val comparison = infix(EQUAL.or(NOT_EQUAL), expression)
+  private val comparison = infix(EQUAL.or(NOT_EQUAL).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS)), expression)
+
   expression = comparison.or(expression)
 
 
-  private var expressionStatement = expression.bind(exp => SEMICOLON.and(Parser.constant(exp)))
-  private val returnStatement = RETURN.and(expressionStatement).bind(exp => Parser.constant(Return(exp)))
+  lazy private val expressionStatement = expression.bind(exp => SEMICOLON.and(Parser.constant(exp)))
+  lazy private val returnStatement = RETURN.and(expressionStatement).bind(exp => Parser.constant(Return(exp)))
 
 
-  private val varStatement: Parser[ASTNode] = VAR.bind(_ => ID.bind(name => {
+  lazy private val varStatement: Parser[ASTNode] = VAR.bind(_ => ID.bind(name => {
     ASSIGN.and(expression.bind(value => SEMICOLON.and(Parser.constant(Create(name, value)))))
   }))
 
-  private val assignStatement = ID.bind(name => {
+  private var statement: Parser[ASTNode] = returnStatement.or(varStatement).or(expressionStatement)
+
+  lazy private val assignStatement = ID.bind(name => {
     ASSIGN.and(expression).bind(value => SEMICOLON.and(Parser.constant(Assign(name, value))))
   })
+  statement = assignStatement.or(statement)
 
 
   lazy private val blockStatement = (statement: Parser[ASTNode]) => LEFT_CURLY.and(Parser.zeroOrMore(statement).bind(body => {
     RIGHT_CURLY.and(Parser.constant(Block(body)))
   }))
 
-  private var statement: Parser[ASTNode] = (varStatement).or(assignStatement).or(expressionStatement).or(returnStatement).or(blockStatement(statement))
+  statement = blockStatement(statement).or(statement)
 
 
   lazy private val elseStatement: Parser[ASTNode] = ELSE.and(blockStatement(statement).bind(block => {
@@ -140,7 +150,7 @@ object Token {
 
   lazy private val ifStatement: Parser[ASTNode] = IF.and(LEFT_PAREN).bind(_ => expression.bind(cond => {
     RIGHT_PAREN.and(blockStatement(statement).bind(block => {
-      elseStatement.bind(statement => {
+      ifElseStatement.bind(statement => {
         Parser.constant(Conditional(cond, block, Some(statement)))
       }).or(Parser.constant(Conditional(cond, block, None)))
     }))

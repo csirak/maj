@@ -14,7 +14,7 @@ INCLUDE = -Isifive_u
 TOOLCHAIN_PREFIX = riscv64-unknown-elf-
 
 # Compiler and linker flags
-CFLAGS = -march=rv64g -mabi=lp64 -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles
+CFLAGS = -march=rv64g -mabi=lp64 -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g
 
 # Default target
 all: $(TARGET)
@@ -26,6 +26,10 @@ $(TARGET): $(SRC)
 # Run target
 run: $(TARGET)
 	qemu-system-riscv64 -no-reboot -nographic -machine sifive_u -bios none -kernel $(TARGET)
+
+# Run target
+debug: $(TARGET)
+	qemu-system-riscv64 -no-reboot -nographic -machine sifive_u -bios none -kernel $(TARGET) -S -s
 
 # Clean target
 clean:

@@ -1,7 +1,7 @@
 package com.maj.codegen
 
 case class Label(val value: Int = 0) {
-  override def toString: String = s".L($value)"
+  override def toString: String = s".L$value"
 }
 
 object Label {
