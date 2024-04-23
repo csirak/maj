@@ -13,9 +13,7 @@ _start:
 
 		li a0, 6
 		jal fact
-
-        j    halt                 # load newline character
-
+		j halt
 
 assert:
         beqz     a0, .Lassert_failed
@@ -24,6 +22,7 @@ assert:
 .Lassert_failed:
         li       a0, 'F'
 .end:
+
 
 putchar:
         li       t0, UART_BASE           # load UART base address
@@ -40,23 +39,36 @@ halt:
         li a0, 0x100000
         li a1, 0x5555
         sw a1, 0(a0)
+        j halt
 
 		
 .global fact
 fact:
-		addi sp, sp, -16
-		sd ra, 8(sp)
-		sd fp, 0(sp)
-		mv fp, sp
+
+        addi sp, sp, -16
+        sd ra, 8(sp)
+        sd fp, 0(sp)
+        mv fp, sp
+
 		addi sp, sp, -8
 		sd a0, 0(sp)
-		j .L1
-.L2:
+.L1:
+		ld a0, -8(fp)
+		addi sp, sp, -8
+		sd a0, 0(sp)
+		li a0, 1
+		mv a1, a0
+		ld a0, 0(sp)
+		addi sp, sp, 8
+		addi a0, a0, 1
+		sgt a0, a0, a1
+		beqz a0, .L2
 		ld a0, -8(fp)
 		addi sp, sp, -8
 		sd a0, 0(sp)
 		li a0, 48
-		ld a1, 0(sp)
+		mv a1, a0
+		ld a0, 0(sp)
 		addi sp, sp, 8
 		add a0, a0, a1
 		jal putchar
@@ -64,23 +76,16 @@ fact:
 		addi sp, sp, -8
 		sd a0, 0(sp)
 		li a0, 1
-		ld a1, 0(sp)
+		mv a1, a0
+		ld a0, 0(sp)
 		addi sp, sp, 8
-		sub a0, a1, a0
+		sub a0, a0, a1
 		sd a0, -8(fp)
-.L1:
-		ld a0, -8(fp)
-		addi sp, sp, -8
-		sd a0, 0(sp)
-		li a0, 1
-		ld a1, 0(sp)
-		addi sp, sp, 8
-		addi a1, a1, 1
-		slt a0, a0, a1
-		seqz a0, a0
-		beqz a0, .L2
-		addi sp, sp, 8
-		ld ra, 8(fp)
-		ld fp, 0(fp)
-		addi sp, sp, 16
-		ret
+		j .L1
+.L2:
+
+        mv sp, fp
+        ld ra, 8(sp)
+        ld fp, 0(sp)
+        addi sp, sp, 16
+        ret

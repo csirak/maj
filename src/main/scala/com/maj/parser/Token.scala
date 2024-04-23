@@ -39,6 +39,8 @@ object Token {
 
   // TODO: Add hex and bin encoding
   private val NUMBER: Parser[ASTNode] = clean("[0-9]+").map(digits => Numeric(digits.toInt))
+  private val BOOL: Parser[ASTNode] = clean("true|false").map(bool => Bool(bool.toBoolean))
+  private val NULL: Parser[ASTNode] = clean("null").map(_ => Null())
 
   private val ID = clean("[a-zA-Z_][a-zA-Z0-9_]*")
 
@@ -50,6 +52,8 @@ object Token {
   private val GREATER: Parser[Operator] = clean(">").map(_ => GreaterThan())
   private val LESS: Parser[Operator] = clean("<").map(_ => LessThan())
   private val NOT_EQUAL: Parser[Operator] = clean("!=").map(_ => NotEquals())
+  private val AND: Parser[Operator] = clean("&&").map(_ => And())
+  private val OR: Parser[Operator] = clean("\\|\\|").map(_ => Or())
 
   private val ADD: Parser[Operator] = clean("\\+").map(_ => Add())
   private val SUB: Parser[Operator] = clean("\\-").map(_ => Sub())
@@ -58,7 +62,7 @@ object Token {
   private val MOD: Parser[Operator] = clean("\\%").map(_ => Mod())
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  private var expression: Parser[ASTNode] = id.or(NUMBER)
+  private var expression: Parser[ASTNode] = BOOL.or(id).or(NUMBER)
 
   private val arguments = (expression: Parser[ASTNode]) => expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(expression)).bind(args => {
@@ -107,7 +111,7 @@ object Token {
   expression = product.or(expression)
   private val sum = infix(ADD.or(SUB), expression)
   expression = sum.or(expression)
-  private val comparison = infix(EQUAL.or(NOT_EQUAL).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS)), expression)
+  private val comparison = infix(EQUAL.or(NOT_EQUAL).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS).or(AND).or(OR)), expression)
 
   expression = comparison.or(expression)
 

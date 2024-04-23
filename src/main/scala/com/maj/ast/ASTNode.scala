@@ -1,6 +1,6 @@
 package com.maj.ast
 
-import com.maj.codegen.Environment
+import com.maj.codegen.{Emitter, Environment}
 
 trait ASTNode {
   def equals(node: ASTNode): Boolean

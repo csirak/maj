@@ -25,11 +25,11 @@ $(TARGET): $(SRC)
 
 # Run target
 run: $(TARGET)
-	qemu-system-riscv64 -no-reboot -nographic -machine sifive_u -bios none -kernel $(TARGET)
+	qemu-system-riscv64 -nographic -machine sifive_u -bios none -kernel $(TARGET)
 
 # Run target
 debug: $(TARGET)
-	qemu-system-riscv64 -no-reboot -nographic -machine sifive_u -bios none -kernel $(TARGET) -S -s
+	qemu-system-riscv64 -m 1G -no-reboot -nographic -machine sifive_u -bios none -kernel $(TARGET) -S -s
 
 # Clean target
 clean:

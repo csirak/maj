@@ -1,6 +1,6 @@
 package com.maj.ast
 
-import com.maj.codegen.Environment
+import com.maj.codegen.{Emitter, Environment}
 
 case class Call(val callee: String, val args: List[ASTNode]) extends ASTNode {
   override def equals(node: ASTNode): Boolean = {
@@ -61,7 +61,7 @@ case class Block(val statements: List[ASTNode]) extends ASTNode {
 }
 
 case class Function(val name: String, val params: List[String], val body: ASTNode) extends ASTNode {
-  private val stackOffsetDepth = 8 * params.length
+  val stackOffsetDepth: Int = 8 * params.length
 
   override def equals(node: ASTNode): Boolean = false
 
@@ -89,7 +89,7 @@ case class Function(val name: String, val params: List[String], val body: ASTNod
     env
   }
 
-  private def paramOffset(index: Int): Int = {
+  def paramOffset(index: Int): Int = {
     stackOffsetDepth - index * 8
   }
 
@@ -106,7 +106,7 @@ case class Function(val name: String, val params: List[String], val body: ASTNod
   }
 
   private def emitEpilogue(implicit emitter: Emitter): Unit = {
-    emitter.emitLine(s"addi sp, sp, $stackOffsetDepth")
+    emitter.emitLine("mv sp, fp")
     emitter.emitLine("ld ra, 8(fp)")
     emitter.emitLine("ld fp, 0(fp)")
     emitter.emitLine("addi sp, sp, 16")
@@ -121,7 +121,6 @@ case class Main(val body: Block) extends ASTNode {
     emitPrologue
     body.emit(env)
     emitEpilogue
-
   }
 
   private def emitPrologue(implicit emitter: Emitter): Unit = {

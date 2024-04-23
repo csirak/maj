@@ -3,9 +3,8 @@ func main() {
 }
 
 func fact(n) {
-   while (n >= 1) {
-       putchar(n+48);
-       n = n - 1;
-   }
-
+    while (n >= 1) {
+        putchar(n+48);
+        n = n - 1;
+    }
 }
