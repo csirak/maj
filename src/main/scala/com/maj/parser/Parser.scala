@@ -1,7 +1,6 @@
 package com.maj.parser
 
 import scala.annotation.tailrec
-import scala.util.matching.Regex
 
 case class ParseResult[+T](val value: T, val source: Source)
 
@@ -46,11 +45,6 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
 
 
 object Parser {
-  def regexp(regex: Regex): Parser[String] = new Parser(source => {
-    source.check(regex)
-  })
-
-
   def constant[U](value: U): Parser[U] = {
     new Parser(source => Some(new ParseResult(value, source)))
   }

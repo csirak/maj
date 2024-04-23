@@ -6,7 +6,9 @@ import com.maj.ast._
 object Token {
   implicit class StringRegexAddition(val s: String) extends AnyVal {
     def regexp: Parser[String] = {
-      Parser.regexp(s.r)
+      new Parser(source => {
+        source.check(s.r)
+      })
     }
   }
 

@@ -1,7 +1,8 @@
 package com.maj.codegen.handlers
 
 import com.maj.ast.{Assign, Create, Iden}
-import com.maj.codegen.{CodeGenerator, Emitter}
+import com.maj.codegen.CodeGenerator
+import com.maj.codegen.emitters.Emitter
 
 class VariablesCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Assign): Unit = {

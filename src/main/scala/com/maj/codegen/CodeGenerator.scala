@@ -2,6 +2,7 @@ package com.maj.codegen
 
 import com.maj.Visitor
 import com.maj.ast._
+import com.maj.codegen.emitters.Emitter
 import com.maj.codegen.handlers._
 
 class CodeGenerator(implicit emitter: Emitter) extends Environment with Visitor[Unit] {

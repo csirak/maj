@@ -2,14 +2,15 @@ package com.maj.codegen.handlers
 
 import com.maj.ast._
 import com.maj.codegen._
+import com.maj.codegen.emitters.Emitter
 
 class FunctionsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Main): Unit = {
-    emitter.emit(AsmTemplates.startTemplate)
+    emitter.emit(RiscVTemplates.start)
     codeGenerator.visit(node.body)
     emitter.emitLine("j halt")
-    emitter.emit(AsmTemplates.assertTemplate)
-    emitter.emit(AsmTemplates.putcharTemplate)
+    emitter.emit(RiscVTemplates.assert)
+    emitter.emit(RiscVTemplates.putchar)
   }
 
   def visit(node: Assert): Unit = {
@@ -46,7 +47,7 @@ class FunctionsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter
 
   def visit(node: Return): Unit = {
     codeGenerator.visit(node.term)
-    emitter.emit(AsmTemplates.returnTemplate)
+    emitter.emit(RiscVTemplates.resetAndReturn)
   }
 
   def visit(node: Function): Unit = {
@@ -54,28 +55,25 @@ class FunctionsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter
       throw new RuntimeException("Too many arguments")
     }
     val localCodeGen = setupLocalCodeGen(node)
-    val stackOffsetDepth = node.stackOffsetDepth
     emitter.emitLine(s"")
     emitter.emit(s".global ${node.name}")
     emitter.emit(s"${node.name}:")
-    emitter.emit(AsmTemplates.functionPrologueTemplate)
-    emitter.emitLine(s"addi sp, sp, -${stackOffsetDepth}")
+    emitter.emit(RiscVTemplates.functionPrologue)
+    emitter.emitLine(s"addi sp, sp, -${node.params.length * 8}")
 
     node.params.indices.foreach((index) => {
-      emitter.emitLine(s"sd a$index, ${stackOffsetDepth - node.paramOffset(index)}(sp)")
+      emitter.emitLine(s"sd a$index, ${index * 8}(sp)")
     })
     localCodeGen.visit(node.body)
-    emitter.emit(AsmTemplates.returnTemplate)
+    emitter.emit(RiscVTemplates.resetAndReturn)
   }
+
 
   private def setupLocalCodeGen(node: Function): CodeGenerator = {
     val codeGen = new CodeGenerator()
-    node.params.zipWithIndex.foreach {
-      case (param, index) => {
-        codeGen.addLocal(param, node.paramOffset(index))
-      }
-    }
-    codeGen.localOffset = node.stackOffsetDepth
+    node.params.foreach(param => {
+      codeGen.addLocalWithOffset(param, 8)
+    })
     codeGen
   }
 }

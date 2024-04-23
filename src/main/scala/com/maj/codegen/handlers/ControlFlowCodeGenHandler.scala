@@ -1,7 +1,8 @@
 package com.maj.codegen.handlers
 
 import com.maj.ast.{Conditional, Loop}
-import com.maj.codegen.{CodeGenerator, Emitter, Label}
+import com.maj.codegen.emitters.Emitter
+import com.maj.codegen.{CodeGenerator, Label}
 
 class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Conditional): Unit = {

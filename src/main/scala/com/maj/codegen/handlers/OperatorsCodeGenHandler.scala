@@ -1,15 +1,16 @@
 package com.maj.codegen.handlers
 
 import com.maj.ast._
-import com.maj.codegen.{AsmTemplates, CodeGenerator, Emitter}
+import com.maj.codegen.emitters.Emitter
+import com.maj.codegen.{CodeGenerator, RiscVTemplates}
 
 class OperatorsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   private def binaryOpPrologue(node: Operator): Unit = {
     codeGenerator.visit(node.left)
-    emitter.emit(AsmTemplates.push1("a0"))
+    emitter.emit(RiscVTemplates.push1("a0"))
     codeGenerator.visit(node.right)
     emitter.emitLine("mv a1, a0")
-    emitter.emit(AsmTemplates.pop1("a0"))
+    emitter.emit(RiscVTemplates.pop1("a0"))
   }
 
   def visit(node: Add): Unit = {

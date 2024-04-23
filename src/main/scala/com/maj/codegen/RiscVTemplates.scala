@@ -1,8 +1,8 @@
 package com.maj.codegen
 
 
-object AsmTemplates {
-  val startTemplate: String =
+object RiscVTemplates {
+  val start: String =
     """
       |.align 2
       |.include "cfg.inc"
@@ -17,7 +17,7 @@ object AsmTemplates {
       |        la    sp, stack_top           # setup stack pointer
       |""".stripMargin
 
-  val assertTemplate: String =
+  val assert: String =
     """
       |assert:
       |        beqz     a0, .Lassert_failed
@@ -27,7 +27,7 @@ object AsmTemplates {
       |        li       a0, 'F'
       |.end:
       |""".stripMargin
-  val putcharTemplate: String =
+  val putchar: String =
     """
       |putchar:
       |        li       t0, UART_BASE           # load UART base address
@@ -48,7 +48,7 @@ object AsmTemplates {
       |""".stripMargin
 
 
-  val returnTemplate: String =
+  val resetAndReturn: String =
     """
       |        mv sp, fp
       |        ld ra, 8(sp)
@@ -58,7 +58,7 @@ object AsmTemplates {
       |""".stripMargin
 
 
-  val functionPrologueTemplate: String =
+  val functionPrologue: String =
     """
       |        addi sp, sp, -16
       |        sd ra, 8(sp)

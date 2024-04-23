@@ -2,19 +2,13 @@ package com.maj.parser
 
 import scala.util.matching.Regex
 
-case class Source(val input: String, val index: Int, log: Boolean = false) {
-
+case class Source(val input: String, val index: Int) {
   def check(regex: Regex): Option[ParseResult[String]] = {
-    val matcher = regex.pattern.matcher(input)
-    matcher.region(index, input.length)
-    println(s"\ntried: $regex")
-    println(s"source: $this")
+    val matcher = regex.pattern.matcher(input).region(index, input.length)
     if (matcher.lookingAt()) {
       val value = matcher.group()
       val newIndex = index + value.length
       val source = new Source(input, newIndex)
-
-      println(s"matched: $value")
       Some(ParseResult(value, source))
     } else {
       None
