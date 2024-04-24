@@ -16,6 +16,5 @@ class StringBufferEmitter extends Emitter {
       write(buffer.mkString("\n"));
       close()
     }
-
   }
 }

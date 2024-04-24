@@ -34,10 +34,10 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
     })
   }
 
-  def parseToCompletion(string: String): T = {
-    val source = Source(string, 0)
+  def parseToCompletion(string: String, log: Boolean = false): T = {
+    val source = Source(string, 0, log)
     parse(source) match {
-      case Some(ParseResult(value, remainingSource)) => if (remainingSource.atEnd()) value else throw new Exception(s"Parse error: Incomplete input at index ${remainingSource.index}")
+      case Some(ParseResult(value, remainingSource)) => if (remainingSource.atEnd()) value else throw new Exception(s"Parse error: Incomplete input at index ${remainingSource.index}\n Remaining input: ${remainingSource}")
       case None => throw new Exception("Parse error: Unable to parse input")
     }
   }

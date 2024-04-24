@@ -6,8 +6,7 @@ import com.maj.typecheck.TypeChecker
 class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: Function): TypeNode = {
     typeChecker.addType(node.name, node.signature)
-
-    val localTypeCheck = new TypeChecker(typeChecker)
+    val localTypeCheck = new TypeChecker(node.name, typeChecker)
     val argTypes = node.signature.params
     val args = node.params
     args.zip(argTypes).foreach {
@@ -35,7 +34,13 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   }
 
   def visit(node: Return): TypeNode = {
-    typeChecker.visit(node.term)
+    val nodeType = typeChecker.visit(node.term)
+    val expectedScope = typeChecker.getType(typeChecker.scopeTag)
+    expectedScope match {
+      case MajFuncType(returnType, _) => typeChecker.assertType(returnType, nodeType)
+      case _ => throw new RuntimeException("Return statement outside of scope")
+    }
+    nodeType
   }
 
   def visit(node: Block): TypeNode = {

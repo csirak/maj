@@ -10,7 +10,6 @@ sealed trait TypeNode {
   }
 }
 
-
 case class MajIntType() extends TypeNode
 
 case class MajBoolType() extends TypeNode
@@ -30,14 +29,12 @@ case class MajFuncType(val returnType: TypeNode, val params: List[TypeNode]) ext
       case _ => false
     }
   }
-
 }
 
 case class MajStruct(val name: String, val fields: Map[String, String]) extends TypeNode
 
 case class MajType(val typ: String) extends TypeNode {
   override def toString: String = typ
-
 }
 
 abstract class TypeOperator extends Operator[TypeNode] with TypeNode {
@@ -49,22 +46,17 @@ abstract class TypeOperator extends Operator[TypeNode] with TypeNode {
 }
 
 case class MajTypeComposeOr(left: TypeNode = null, right: TypeNode = null) extends TypeOperator {
-
   override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
     resolver(other).acceptsWithResolver(resolver(left), resolver) || resolver(other).acceptsWithResolver(resolver(right), resolver)
   }
-
 
   override def get(left: TypeNode, right: TypeNode): TypeOperator = MajTypeComposeOr(left, right)
 }
 
 case class MajTypeComposeAnd(left: TypeNode = null, right: TypeNode = null) extends TypeOperator {
-
-
   override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
     resolver(other).acceptsWithResolver(resolver(left), resolver) && other.acceptsWithResolver(resolver(right), resolver)
   }
-
 
   override def get(left: TypeNode, right: TypeNode): TypeOperator = MajTypeComposeAnd(left, right)
 }

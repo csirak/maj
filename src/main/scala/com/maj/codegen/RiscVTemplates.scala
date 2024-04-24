@@ -15,6 +15,11 @@ object RiscVTemplates {
       |
       |        la    sp, stack_top              # setup stack pointer
       |        jal     main                     # jump to main function
+      |halt:
+      |        li a0, 0x100000
+      |        li a1, 0x5555
+      |        sw a1, 0(a0)
+      |        j halt
       |
       |putchar:
       |        li       t0, UART_BASE           # load UART base address
@@ -28,11 +33,7 @@ object RiscVTemplates {
       |        sw       a0, UART_REG_TXFIFO(t0) # write character to TX FIFO
       |        ret
       |
-      |halt:
-      |        li a0, 0x100000
-      |        li a1, 0x5555
-      |        sw a1, 0(a0)
-      |        j halt
+
       |""".stripMargin
 
 

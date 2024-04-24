@@ -195,13 +195,15 @@ object Token {
   }))
 
 
-  lazy private val ifElseStatement: Parser[ASTNode] = ELSE.and(IF).and(LEFT_PAREN).bind(_ => expression.bind(cond => {
-    RIGHT_PAREN.and(blockStatement(statement).bind(block => {
-      ifElseStatement.or(elseStatement).bind(statement => {
-        Parser.constant(Conditional(cond, block, Some(statement)))
-      }).or(Parser.constant(Conditional(cond, block, None)))
-    }))
-  }))
+  //  lazy private val ifElseStatement: Parser[ASTNode] = ELSE.and(IF).and(LEFT_PAREN).bind(_ => expression.bind(cond => {
+  //    RIGHT_PAREN.and(blockStatement(statement).bind(block => {
+  //      ifElseStatement.or(elseStatement).bind(statement => {
+  //        Parser.constant(Conditional(cond, block, Some(statement)))
+  //      }).or(Parser.constant(Conditional(cond, block, None)))
+  //    }))
+  //  }))
+
+  lazy private val ifElseStatement: Parser[ASTNode] = ELSE.and(ifStatement).or(elseStatement)
 
   lazy private val ifStatement: Parser[ASTNode] = IF.and(LEFT_PAREN).bind(_ => expression.bind(cond => {
     RIGHT_PAREN.and(blockStatement(statement).bind(block => {

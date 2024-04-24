@@ -34,7 +34,6 @@ case class Not(val node: ASTNode = null) extends ASTNode {
   def get(one: ASTNode): ASTNode = Not(one)
 }
 
-
 abstract class AstOperator extends Operator[ASTNode] with ASTNode {
   def left: ASTNode
 
@@ -70,7 +69,6 @@ case class GreaterThanOrEquals(val left: ASTNode = null, val right: ASTNode = nu
 case class GreaterThan(val left: ASTNode = null, val right: ASTNode = null) extends AstOperator {
   override def get(left: ASTNode, right: ASTNode): AstOperator = GreaterThan(left, right)
 }
-
 
 case class NotEquals(val left: ASTNode = null, val right: ASTNode = null) extends AstOperator {
   override def get(left: ASTNode, right: ASTNode): AstOperator = NotEquals(left, right)

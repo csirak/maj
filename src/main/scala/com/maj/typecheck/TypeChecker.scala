@@ -4,7 +4,7 @@ import com.maj.Visitor
 import com.maj.ast._
 import com.maj.typecheck.handlers._
 
-class TypeChecker(parent: TypeEnvironment = null) extends TypeEnvironment(parent) with Visitor[TypeNode] {
+class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) extends TypeEnvironment(parent) with Visitor[TypeNode] {
   private val scalarHandler = new ScalarTypeCheckHandler(this)
   private val operatorHandler = new OperatorTypeCheckHandler(this)
   private val variableHandler = new VariableTypeCheckHandler(this)
