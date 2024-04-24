@@ -26,4 +26,9 @@ class VariableTypeCheckHandler(val typeChecker: TypeChecker) {
       throw new RuntimeException(s"Variable ${node.value} not found")
     case t => t
   }
+
+  def visit(node: TypeDef): TypeNode = {
+    typeChecker.addType(node.name, node.typ)
+    MajVoidType()
+  }
 }

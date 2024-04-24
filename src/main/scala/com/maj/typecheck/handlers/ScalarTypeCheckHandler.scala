@@ -10,4 +10,6 @@ class ScalarTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: MajBool): TypeNode = new MajBoolType()
 
   def visit(node: MajNull): TypeNode = new MajVoidType()
+
+  def visit(node: MajChar): TypeNode = new MajTypeComposeOr(new MajCharType(), new MajIntType())
 }

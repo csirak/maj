@@ -3,32 +3,19 @@ package com.maj.codegen
 
 object RiscVTemplates {
   val start: String =
-    """
-      |.align 2
+    """.align 2
       |.include "cfg.inc"
       |.equ UART_REG_TXFIFO,   0
       |
       |.section .text
       |.global _start
       |_start:
-      |        csrr  t0, mhartid             # read hardware thread id (`hart` stands for `hardware thread`)
-      |        bnez  t0, halt                # run only on the first hardware thread (hartid == 0), halt all the other threads
+      |        csrr  t0, mhartid                # read hardware thread id (`hart` stands for `hardware thread`)
+      |        bnez  t0, halt                   # run only on the first hardware thread (hartid == 0), halt all the other threads
       |
-      |        la    sp, stack_top           # setup stack pointer
-      |""".stripMargin
-
-  val assert: String =
-    """
-      |assert:
-      |        beqz     a0, .Lassert_failed
-      |        li       a0, '.'
-      |        j        .end
-      |.Lassert_failed:
-      |        li       a0, 'F'
-      |.end:
-      |""".stripMargin
-  val putchar: String =
-    """
+      |        la    sp, stack_top              # setup stack pointer
+      |        jal     main                     # jump to main function
+      |
       |putchar:
       |        li       t0, UART_BASE           # load UART base address
       |
@@ -40,6 +27,7 @@ object RiscVTemplates {
       |
       |        sw       a0, UART_REG_TXFIFO(t0) # write character to TX FIFO
       |        ret
+      |
       |halt:
       |        li a0, 0x100000
       |        li a1, 0x5555

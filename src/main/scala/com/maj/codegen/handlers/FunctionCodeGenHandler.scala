@@ -5,19 +5,6 @@ import com.maj.codegen._
 import com.maj.codegen.emitters.Emitter
 
 class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  def visit(node: Main): Unit = {
-    emitter.emit(RiscVTemplates.start)
-    codeGenerator.visit(node.body)
-    emitter.emitLine("j halt")
-    emitter.emit(RiscVTemplates.assert)
-    emitter.emit(RiscVTemplates.putchar)
-  }
-
-  def visit(node: Assert): Unit = {
-    codeGenerator.visit(node.condition)
-    emitter.emitLine("jal assert")
-  }
-
   def visit(node: Call): Unit = {
     node.args.length match {
       case n if n <= 1 =>

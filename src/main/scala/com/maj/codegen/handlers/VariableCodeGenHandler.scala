@@ -1,6 +1,6 @@
 package com.maj.codegen.handlers
 
-import com.maj.ast.{Assign, Create, Iden}
+import com.maj.ast.{Assign, Create, Iden, TypeDef}
 import com.maj.codegen.CodeGenerator
 import com.maj.codegen.emitters.Emitter
 
@@ -31,5 +31,9 @@ class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     } else {
       emitter.emitLine(s"ld a0, -$offset(fp)")
     }
+  }
+
+  def visit(node: TypeDef): Unit = {
+    // Do nothing
   }
 }

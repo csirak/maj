@@ -40,37 +40,51 @@ object Token {
   private val LEFT_CURLY = clean("\\{")
   private val RIGHT_CURLY = clean("\\}")
 
-  // TODO: Add hex and bin encoding
+  private val SINGLE_AND = clean("\\&").map(_ => MajTypeComposeAnd())
+  private val SINGLE_OR = clean("\\|").map(_ => MajTypeComposeOr())
+
   private val BINARY = clean("0b").and(clean("[01]+")).map(bin => MajInt(Integer.parseInt(bin, 2)))
   private val HEX = clean("0x").and(clean("[0-9a-fA-F]+")).map(hex => MajInt(Integer.parseInt(hex, 16)))
   private val DEC: Parser[ASTNode] = clean("[0-9]+").map(digits => MajInt(digits.toInt))
   private val NUMBER: Parser[ASTNode] = BINARY.or(HEX).or(DEC)
   private val BOOL: Parser[ASTNode] = clean("true|false").map(bool => MajBool(bool.toBoolean))
   private val NULL: Parser[ASTNode] = clean("null").map(_ => MajNull())
+  private val ASCII: Parser[ASTNode] = clean("'[ -~]'").map(char => MajChar(char.charAt(1)))
 
   private val ID = clean("[a-zA-Z_][a-zA-Z0-9_]*")
 
-  private val BOOLTAG = clean("bool")
-  private val INTTAG = clean("int")
-  private val VOIDTAG = clean("void")
+  private val BOOL_TAG = clean("bool")
+  private val INT_TAG = clean("int")
+  private val VOID_TAG = clean("void")
   private val STRUCT = clean("struct")
 
-  private var TYPE = BOOLTAG.or(INTTAG).or(VOIDTAG).or(ID)
+  private var typeExpression: Parser[TypeNode] = BOOL_TAG.or(INT_TAG).or(VOID_TAG).or(ID).bind(name => {
+    Parser.constant(MajType(name))
+  })
 
-  private val TYPEDEF = clean("type")
+  typeExpression = LEFT_PAREN.and(typeExpression).bind(t => {
+    RIGHT_PAREN.and(Parser.constant(t))
+  }).or(typeExpression)
 
-  private val ANNOTATION = COLON.and(TYPE.bind(typ => {
+  private val typeCompose: Parser[TypeNode] = infix(SINGLE_OR.or(SINGLE_AND), typeExpression)
+
+  typeExpression = typeCompose.or(typeExpression)
+
+
+  private val TYPE = clean("type")
+
+  private val ANNOTATION = COLON.and(typeExpression.bind(typ => {
     Parser.constant(typ)
   }))
 
-  private val IDANNOTATION = ID.bind(name => {
+  private val ID_ANNOTATION = ID.bind(name => {
     ANNOTATION.bind(typ => {
       Parser.constant((name, typ))
     })
   })
 
 
-  private val STRUCTDEF = STRUCT.and(LEFT_CURLY.bind(_ => Parser.zeroOrMore(IDANNOTATION).bind(fields => {
+  private val STRUCTDEF = STRUCT.and(LEFT_CURLY.bind(_ => Parser.zeroOrMore(ID_ANNOTATION).bind(fields => {
     RIGHT_CURLY.and(ID.bind(name => {
       SEMICOLON.and(Parser.constant((name, fields)))
     }))
@@ -78,23 +92,24 @@ object Token {
 
   private val NOT: Parser[Not] = clean("\\!").map(_ => Not())
 
-  private val EQUAL: Parser[Operator] = clean("==").map(_ => Equals())
-  private val GTOREQ: Parser[Operator] = clean(">=").map(_ => GreaterThanOrEquals())
-  private val LTOREQ: Parser[Operator] = clean("<=").map(_ => LessThanOrEquals())
-  private val GREATER: Parser[Operator] = clean(">").map(_ => GreaterThan())
-  private val LESS: Parser[Operator] = clean("<").map(_ => LessThan())
-  private val NEQ: Parser[Operator] = clean("!=").map(_ => NotEquals())
-  private val AND: Parser[Operator] = clean("&&").map(_ => And())
-  private val OR: Parser[Operator] = clean("\\|\\|").map(_ => Or())
+  private val EQUAL: Parser[AstOperator] = clean("==").map(_ => Equals())
+  private val GTOREQ: Parser[AstOperator] = clean(">=").map(_ => GreaterThanOrEquals())
+  private val LTOREQ: Parser[AstOperator] = clean("<=").map(_ => LessThanOrEquals())
+  private val GREATER: Parser[AstOperator] = clean(">").map(_ => GreaterThan())
+  private val LESS: Parser[AstOperator] = clean("<").map(_ => LessThan())
+  private val NEQ: Parser[AstOperator] = clean("!=").map(_ => NotEquals())
+  private val AND: Parser[AstOperator] = clean("&&").map(_ => And())
+  private val OR: Parser[AstOperator] = clean("\\|\\|").map(_ => Or())
 
-  private val ADD: Parser[Operator] = clean("\\+").map(_ => Add())
-  private val SUB: Parser[Operator] = clean("\\-").map(_ => Sub())
-  private val MUL: Parser[Operator] = clean("\\*").map(_ => Mul())
-  private val DIV: Parser[Operator] = clean("\\/").map(_ => Div())
-  private val MOD: Parser[Operator] = clean("\\%").map(_ => Mod())
+  private val ADD: Parser[AstOperator] = clean("\\+").map(_ => Add())
+  private val SUB: Parser[AstOperator] = clean("\\-").map(_ => Sub())
+  private val MUL: Parser[AstOperator] = clean("\\*").map(_ => Mul())
+  private val DIV: Parser[AstOperator] = clean("\\/").map(_ => Div())
+  private val MOD: Parser[AstOperator] = clean("\\%").map(_ => Mod())
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  private var expression: Parser[ASTNode] = BOOL.or(id).or(NUMBER).or(NULL)
+  private var expression: Parser[ASTNode] = BOOL.or(ASCII).or(id).or(NUMBER).or(NULL)
+
 
   private val arguments = (expression: Parser[ASTNode]) => expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(expression)).bind(args => {
@@ -104,27 +119,27 @@ object Token {
 
   private val call: Parser[ASTNode] = ID.bind(name => {
     LEFT_PAREN.bind(_ => arguments(expression).bind(args => {
-      RIGHT_PAREN.and(if (name == "assert") Parser.constant(Assert(args.head)) else Parser.constant(Call(name, args)))
+      RIGHT_PAREN.and(Parser.constant(Call(name, args)))
     }).or(RIGHT_PAREN.and(Parser.constant(Call(name, List.empty)))))
   })
 
   expression = call.or(expression)
 
-  expression = LEFT_PAREN.bind(par => {
+  expression = LEFT_PAREN.and(
     expression.bind(
       expr => {
         RIGHT_PAREN.and(Parser.constant(expr))
       })
-  }).or(expression)
+  ).or(expression)
 
   private val unary: Parser[ASTNode] = NOT.bind((not) =>
     expression.bind((exp) => Parser.constant(not.get(exp)))
   )
   expression = unary.or(expression)
 
-  private val infix = (operator: Parser[Operator], operandFn: Parser[ASTNode]) => {
+  private def infix[T, O <: Operator[T]](operator: Parser[O], operandFn: Parser[T]): Parser[T] = {
     val operand = operandFn
-    operand.bind(first => {
+    operand().bind(first => {
       Parser.zeroOrMore(operator.bind(op => {
         operand().bind(exp => {
           Parser.constant((op, exp))
@@ -150,13 +165,17 @@ object Token {
 
   lazy private val expressionStatement = expression.bind(exp => SEMICOLON.and(Parser.constant(exp)))
   lazy private val returnStatement = RETURN.and(expressionStatement).bind(exp => Parser.constant(Return(exp)))
-
+  lazy private val typeStatement = TYPE.and(ID.bind(name => {
+    ANNOTATION.bind(typ => {
+      SEMICOLON.and(Parser.constant(TypeDef(name, typ)))
+    })
+  }))
 
   lazy private val varStatement: Parser[ASTNode] = VAR.bind(_ => ID.bind(name => {
     ASSIGN.and(expression.bind(value => SEMICOLON.and(Parser.constant(Create(name, value)))))
   }))
 
-  private var statement: Parser[ASTNode] = returnStatement.or(varStatement).or(expressionStatement)
+  private var statement: Parser[ASTNode] = returnStatement.or(typeStatement).or(varStatement).or(expressionStatement)
 
   lazy private val assignStatement = ID.bind(name => {
     ASSIGN.and(expression).bind(value => SEMICOLON.and(Parser.constant(Assign(name, value))))
@@ -203,8 +222,8 @@ object Token {
 
   statement = whileStatement.or(statement)
 
-  lazy private val paramsStatement: Parser[List[(String, String)]] = IDANNOTATION.bind(param => {
-    Parser.zeroOrMore(COMMA.and(IDANNOTATION)).bind(params => {
+  lazy private val paramsStatement: Parser[List[(String, TypeNode)]] = ID_ANNOTATION.bind(param => {
+    Parser.zeroOrMore(COMMA.and(ID_ANNOTATION)).bind(params => {
       Parser.constant(param :: params)
     })
   }).or(Parser.constant(List.empty))

@@ -12,7 +12,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     val args = node.params
     args.zip(argTypes).foreach {
       case (arg, argType) => {
-        val typ = localTypeCheck.getOrThrow(argType)
+        val typ = localTypeCheck.getOrThrow(argType.toString)
         localTypeCheck.addType(arg, typ)
       }
     }
@@ -27,11 +27,11 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     }
     val func = expected.asInstanceOf[MajFuncType]
     val args = node.args.map(typeChecker.visit)
-    val combined: List[(TypeNode, TypeNode)] = func.params.map(typeChecker.getType).zipAll(args, MajTypeUndefined(), MajTypeUndefined())
+    val combined: List[(TypeNode, TypeNode)] = func.params.map(_.toString).map(typeChecker.getType).zipAll(args, MajTypeUndefined(), MajTypeUndefined())
     combined.foreach {
       case (expected, actual) => typeChecker.assertType(expected, actual)
     }
-    typeChecker.getOrThrow(func.returnType)
+    typeChecker.getOrThrow(func.returnType.toString)
   }
 
   def visit(node: Return): TypeNode = {
@@ -41,14 +41,5 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: Block): TypeNode = {
     node.statements.map(typeChecker.visit)
     MajVoidType()
-  }
-
-  def visit(node: Assert): TypeNode = {
-    typeChecker.assertType(MajBoolType(), typeChecker.visit(node.condition))
-    MajVoidType()
-  }
-
-  def visit(node: Main): TypeNode = {
-    typeChecker.visit(node.body)
   }
 }

@@ -5,7 +5,7 @@ import com.maj.codegen.emitters.Emitter
 import com.maj.codegen.{CodeGenerator, RiscVTemplates}
 
 class OperatorCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  private def binaryOpPrologue(node: Operator): Unit = {
+  private def binaryOpPrologue(node: AstOperator): Unit = {
     codeGenerator.visit(node.left)
     emitter.emit(RiscVTemplates.push1("a0"))
     codeGenerator.visit(node.right)

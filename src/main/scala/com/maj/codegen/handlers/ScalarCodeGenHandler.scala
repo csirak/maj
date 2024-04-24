@@ -1,6 +1,6 @@
 package com.maj.codegen.handlers
 
-import com.maj.ast.{MajBool, MajInt, MajNull}
+import com.maj.ast.{MajBool, MajChar, MajInt, MajNull}
 import com.maj.codegen.CodeGenerator
 import com.maj.codegen.emitters.Emitter
 
@@ -15,5 +15,9 @@ class ScalarCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: E
 
   def visit(node: MajNull): Unit = {
     emitter.emitLine("li a0, 0")
+  }
+
+  def visit(node: MajChar): Unit = {
+    emitter.emitLine(s"li a0, '${node.value}'")
   }
 }

@@ -4,6 +4,9 @@ import com.maj.codegen.emitters.StringBufferEmitter
 import com.maj.parser._
 import com.maj.typecheck.BaseTypeChecker
 
+
+// TODO: Pointers and references
+// TODO: Structs
 object Main {
   def main(args: Array[String]): Unit = {
     implicit val emitter: StringBufferEmitter = new StringBufferEmitter()

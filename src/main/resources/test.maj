@@ -1,12 +1,15 @@
-func fact(n: int): void {
-    while (n >= 1) {
-        putchar(n+48);
-        n = n - 1;
-    }
+type number: bool | int;
+
+func fact(n: number): void {
+    putchar('F');
+    n = n - 1;
 }
 
 func main(): void{
     var x = 0x10 - 0xa;
+    var y = true;
     fact(x);
+    fact(y);
+
 }
 
