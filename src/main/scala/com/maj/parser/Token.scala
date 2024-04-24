@@ -34,17 +34,47 @@ object Token {
   private val COMMA = clean("[,]")
   private val ASSIGN = clean("=")
   private val SEMICOLON = clean(";")
+  private val COLON = clean(":")
   private val LEFT_PAREN: Parser[String] = clean("\\(")
   private val RIGHT_PAREN: Parser[String] = clean("\\)")
   private val LEFT_CURLY = clean("\\{")
   private val RIGHT_CURLY = clean("\\}")
 
   // TODO: Add hex and bin encoding
-  private val NUMBER: Parser[ASTNode] = clean("[0-9]+").map(digits => Numeric(digits.toInt))
-  private val BOOL: Parser[ASTNode] = clean("true|false").map(bool => Bool(bool.toBoolean))
-  private val NULL: Parser[ASTNode] = clean("null").map(_ => Null())
+  private val BINARY = clean("0b").and(clean("[01]+")).map(bin => MajInt(Integer.parseInt(bin, 2)))
+  private val HEX = clean("0x").and(clean("[0-9a-fA-F]+")).map(hex => MajInt(Integer.parseInt(hex, 16)))
+  private val DEC: Parser[ASTNode] = clean("[0-9]+").map(digits => MajInt(digits.toInt))
+  private val NUMBER: Parser[ASTNode] = BINARY.or(HEX).or(DEC)
+  private val BOOL: Parser[ASTNode] = clean("true|false").map(bool => MajBool(bool.toBoolean))
+  private val NULL: Parser[ASTNode] = clean("null").map(_ => MajNull())
 
   private val ID = clean("[a-zA-Z_][a-zA-Z0-9_]*")
+
+  private val BOOLTAG = clean("bool")
+  private val INTTAG = clean("int")
+  private val VOIDTAG = clean("void")
+  private val STRUCT = clean("struct")
+
+  private var TYPE = BOOLTAG.or(INTTAG).or(VOIDTAG).or(ID)
+
+  private val TYPEDEF = clean("type")
+
+  private val ANNOTATION = COLON.and(TYPE.bind(typ => {
+    Parser.constant(typ)
+  }))
+
+  private val IDANNOTATION = ID.bind(name => {
+    ANNOTATION.bind(typ => {
+      Parser.constant((name, typ))
+    })
+  })
+
+
+  private val STRUCTDEF = STRUCT.and(LEFT_CURLY.bind(_ => Parser.zeroOrMore(IDANNOTATION).bind(fields => {
+    RIGHT_CURLY.and(ID.bind(name => {
+      SEMICOLON.and(Parser.constant((name, fields)))
+    }))
+  })))
 
   private val NOT: Parser[Not] = clean("\\!").map(_ => Not())
 
@@ -53,7 +83,7 @@ object Token {
   private val LTOREQ: Parser[Operator] = clean("<=").map(_ => LessThanOrEquals())
   private val GREATER: Parser[Operator] = clean(">").map(_ => GreaterThan())
   private val LESS: Parser[Operator] = clean("<").map(_ => LessThan())
-  private val NOT_EQUAL: Parser[Operator] = clean("!=").map(_ => NotEquals())
+  private val NEQ: Parser[Operator] = clean("!=").map(_ => NotEquals())
   private val AND: Parser[Operator] = clean("&&").map(_ => And())
   private val OR: Parser[Operator] = clean("\\|\\|").map(_ => Or())
 
@@ -64,7 +94,7 @@ object Token {
   private val MOD: Parser[Operator] = clean("\\%").map(_ => Mod())
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  private var expression: Parser[ASTNode] = BOOL.or(id).or(NUMBER)
+  private var expression: Parser[ASTNode] = BOOL.or(id).or(NUMBER).or(NULL)
 
   private val arguments = (expression: Parser[ASTNode]) => expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(expression)).bind(args => {
@@ -113,7 +143,7 @@ object Token {
   expression = product.or(expression)
   private val sum = infix(ADD.or(SUB), expression)
   expression = sum.or(expression)
-  private val comparison = infix(EQUAL.or(NOT_EQUAL).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS).or(AND).or(OR)), expression)
+  private val comparison = infix(EQUAL.or(NEQ).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS).or(AND).or(OR)), expression)
 
   expression = comparison.or(expression)
 
@@ -173,18 +203,20 @@ object Token {
 
   statement = whileStatement.or(statement)
 
-  lazy private val paramsStatement = ID.bind(param => {
-    Parser.zeroOrMore(COMMA.and(ID)).bind(params => {
+  lazy private val paramsStatement: Parser[List[(String, String)]] = IDANNOTATION.bind(param => {
+    Parser.zeroOrMore(COMMA.and(IDANNOTATION)).bind(params => {
       Parser.constant(param :: params)
     })
   }).or(Parser.constant(List.empty))
 
   lazy private val functionStatement = (statement: Parser[ASTNode]) => FUNCTION.and(ID.bind(name => {
     LEFT_PAREN.and(paramsStatement).bind(params => {
-      RIGHT_PAREN.and(blockStatement(statement)).bind(body => {
-        if (name == "main") Parser.constant(Main(body))
-        else Parser.constant(Function(name, params, body))
-      })
+      RIGHT_PAREN.and(ANNOTATION.bind(returnType => {
+        blockStatement(statement).bind(body => {
+
+          Parser.constant(Function(name, params.map(_._1), MajFuncType(returnType, params.map(_._2)), body))
+        })
+      }))
     })
   }))
 

@@ -4,7 +4,7 @@ import com.maj.ast.{Assign, Create, Iden}
 import com.maj.codegen.CodeGenerator
 import com.maj.codegen.emitters.Emitter
 
-class VariablesCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
+class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Assign): Unit = {
     val offset = codeGenerator.get(node.name)
     if (offset == -1) {

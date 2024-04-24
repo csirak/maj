@@ -1,6 +1,7 @@
 package com.maj.ast
 
-sealed trait ASTNode
+sealed trait ASTNode {
+}
 
 case class Conditional(val condition: ASTNode, val ifTrue: ASTNode, val elseIfTrue: Option[ASTNode] = None) extends ASTNode
 
@@ -12,17 +13,17 @@ case class Return(val term: ASTNode) extends ASTNode
 
 case class Block(val statements: List[ASTNode]) extends ASTNode
 
-case class Function(val name: String, val params: List[String], val body: ASTNode) extends ASTNode
+case class Function(val name: String, val params: List[String], val signature: MajFuncType, val body: ASTNode) extends ASTNode
 
 case class Main(val body: Block) extends ASTNode
 
 case class Assert(val condition: ASTNode) extends ASTNode
 
-case class Numeric(val value: Number) extends ASTNode
+case class MajInt(val value: Number) extends ASTNode
 
-case class Bool(val value: Boolean) extends ASTNode
+case class MajBool(val value: Boolean) extends ASTNode
 
-case class Null() extends ASTNode
+case class MajNull() extends ASTNode
 
 case class Assign(val name: String, val value: ASTNode) extends ASTNode
 

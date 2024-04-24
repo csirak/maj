@@ -4,7 +4,7 @@ import com.maj.ast._
 import com.maj.codegen._
 import com.maj.codegen.emitters.Emitter
 
-class FunctionsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
+class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Main): Unit = {
     emitter.emit(RiscVTemplates.start)
     codeGenerator.visit(node.body)
@@ -70,7 +70,7 @@ class FunctionsCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter
 
 
   private def setupLocalCodeGen(node: Function): CodeGenerator = {
-    val codeGen = new CodeGenerator()
+    val codeGen = new CodeGenerator(codeGenerator)
     node.params.foreach(param => {
       codeGen.addLocalWithOffset(param, 8)
     })

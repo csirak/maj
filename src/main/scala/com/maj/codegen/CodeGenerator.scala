@@ -5,11 +5,11 @@ import com.maj.ast._
 import com.maj.codegen.emitters.Emitter
 import com.maj.codegen.handlers._
 
-class CodeGenerator(implicit emitter: Emitter) extends Environment with Visitor[Unit] {
-  private val functionsHandler = new FunctionsCodeGenHandler(this)
-  private val operatorsHandler = new OperatorsCodeGenHandler(this)
-  private val scalarsHandler = new ScalarsCodeGenHandler(this)
-  private val variablesHandler = new VariablesCodeGenHandler(this)
+class CodeGenerator(parent: OffsetEnvironment = null)(implicit emitter: Emitter) extends OffsetEnvironment(parent) with Visitor[Unit] {
+  private val functionsHandler = new FunctionCodeGenHandler(this)
+  private val operatorsHandler = new OperatorCodeGenHandler(this)
+  private val scalarsHandler = new ScalarCodeGenHandler(this)
+  private val variablesHandler = new VariableCodeGenHandler(this)
   private val controlFlowHandler = new ControlFlowCodeGenHandler(this)
 
   def visit(node: ASTNode): Unit = node match {
@@ -36,9 +36,9 @@ class CodeGenerator(implicit emitter: Emitter) extends Environment with Visitor[
     case (node: LessThanOrEquals) => operatorsHandler.visit(node)
     case (node: GreaterThanOrEquals) => operatorsHandler.visit(node)
 
-    case (node: Numeric) => scalarsHandler.visit(node)
-    case (node: Bool) => scalarsHandler.visit(node)
-    case (node: Null) => scalarsHandler.visit(node)
+    case (node: MajInt) => scalarsHandler.visit(node)
+    case (node: MajBool) => scalarsHandler.visit(node)
+    case (node: MajNull) => scalarsHandler.visit(node)
 
     case (node: Assign) => variablesHandler.visit(node)
     case (node: Create) => variablesHandler.visit(node)
