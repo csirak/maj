@@ -7,8 +7,7 @@ sealed trait TypeNode {
 
   def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
     resolver(this) match {
-      case (node: MajTypeComposeOr) => node.acceptsWithResolver(other, resolver)
-      case (node: MajTypeComposeAnd) => node.acceptsWithResolver(other, resolver)
+      case (node: TypeOperator) => node.acceptsWithResolver(other, resolver)
       case _ => this.accepts(other)
 
     }
@@ -38,8 +37,8 @@ case class MajFuncType(val returnType: TypeNode, val params: List[TypeNode]) ext
   override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
     other match {
       case MajFuncType(otherReturnType, otherParams) => {
-        resolver(returnType).acceptsWithResolver(resolver(otherReturnType), resolver) && params.zip(otherParams).forall {
-          case (param, otherParam) => param.acceptsWithResolver(resolver(otherParam), resolver)
+        returnType.acceptsWithResolver(otherReturnType, resolver) && params.zip(otherParams).forall {
+          case (param, otherParam) => param.acceptsWithResolver(otherParam, resolver)
         }
       }
       case _ => false
@@ -53,7 +52,9 @@ case class MajType(val typ: String) extends TypeNode {
   override def toString: String = typ
 }
 
-case class MajReturnType(val returnType: TypeNode) extends TypeNode {
+abstract class ReturnableType extends TypeNode {
+  def returnType: TypeNode
+
   override def accepts(other: TypeNode): Boolean = {
     returnType.accepts(other)
   }
@@ -63,15 +64,9 @@ case class MajReturnType(val returnType: TypeNode) extends TypeNode {
   }
 }
 
-case class MajConditionalReturn(val returnType: TypeNode) extends TypeNode {
-  override def accepts(other: TypeNode): Boolean = {
-    returnType.accepts(other)
-  }
+case class MajReturnType(val returnType: TypeNode) extends ReturnableType
 
-  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
-    returnType.acceptsWithResolver(resolver(other), resolver)
-  }
-}
+case class MajConditionalReturn(val returnType: TypeNode) extends ReturnableType
 
 abstract class TypeOperator extends Operator[TypeNode] with TypeNode {
   def left: TypeNode
@@ -82,7 +77,6 @@ abstract class TypeOperator extends Operator[TypeNode] with TypeNode {
 }
 
 case class MajTypeComposeOr(left: TypeNode = null, right: TypeNode = null) extends TypeOperator {
-
   override def accepts(other: TypeNode): Boolean = {
     other.accepts(left) || other.accepts(right)
   }
