@@ -1,5 +1,7 @@
 package com.maj.parser
 
+import com.maj.ast.ASTNode
+
 import scala.annotation.tailrec
 
 case class ParseResult[+T](val value: T, val source: Source)
@@ -41,6 +43,15 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
       case None => throw new Exception("Parse error: Unable to parse input")
     }
   }
+
+  def parseFile(path: String): ASTNode = {
+    val sourceFile = scala.io.Source.fromFile(path, "utf-8")
+    val lines = sourceFile.getLines.mkString("\n")
+    val ast = Token.parser.parseToCompletion(lines)
+    sourceFile.close()
+    ast
+  }
+
 }
 
 

@@ -44,28 +44,6 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   }
 
   def visit(node: Block): TypeNode = {
-    //    val returns = node.statements.map(typeChecker.visit).find {
-    //      case MajReturnType(_) => true
-    //      case MajConditionalReturn(_) => true
-    //      case _ => false
-    //    }
-    //
-    //    if (returns.isEmpty) {
-    //      MajVoidType()
-    //    } else {
-    //      var returnAggregator: TypeNode = returns.head
-    //      for (returnAble <- returns) {
-    //        returnAble match {
-    //          case MajReturnType(_) => return returnAggregator
-    //          case MajConditionalReturn(typ) => {
-    //            returnAggregator = MajTypeComposeOr(returnAggregator, typ)
-    //          }
-    //          case _ => throw new RuntimeException("Invalid return type")
-    //        }
-    //      }
-    //      returnAggregator
-    //    }
-
     val returns = node.statements.flatMap(stmt => typeChecker.visit(stmt) match {
       case ret@(MajReturnType(_) | MajConditionalReturn(_)) => Some(ret)
       case _ => None
