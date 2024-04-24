@@ -100,14 +100,6 @@ fact:
 		jal putchar
 .L6:
 .L4:
-		li a0, 1
-
-        mv sp, fp
-        ld ra, 8(sp)
-        ld fp, 0(sp)
-        addi sp, sp, 16
-        ret
-
 
         mv sp, fp
         ld ra, 8(sp)

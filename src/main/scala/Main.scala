@@ -15,7 +15,7 @@ object Main {
     implicit val emitter: StringBufferEmitter = new StringBufferEmitter()
     val sourceFile = scala.io.Source.fromFile("src/main/resources/test.maj", "utf-8")
     val lines = sourceFile.getLines.mkString("\n")
-    val ast: ASTNode = Token.parser.parseToCompletion(lines, log = true)
+    val ast: ASTNode = Token.parser.parseToCompletion(lines)
     val codeGen = new CodeGenerator()
     val typeCheck = BaseTypeChecker()
     typeCheck.visit(ast)

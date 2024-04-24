@@ -57,6 +57,7 @@ object Token {
   private val INT_TAG = clean("int")
   private val VOID_TAG = clean("void")
   private val STRUCT = clean("struct")
+  private val TYPE = clean("type")
 
   private var typeExpression: Parser[TypeNode] = BOOL_TAG.or(INT_TAG).or(VOID_TAG).or(ID).bind(name => {
     Parser.constant(MajType(name))
@@ -71,8 +72,6 @@ object Token {
   typeExpression = typeCompose.or(typeExpression)
 
 
-  private val TYPE = clean("type")
-
   private val ANNOTATION = COLON.and(typeExpression.bind(typ => {
     Parser.constant(typ)
   }))
@@ -82,7 +81,6 @@ object Token {
       Parser.constant((name, typ))
     })
   })
-
 
   private val STRUCTDEF = STRUCT.and(LEFT_CURLY.bind(_ => Parser.zeroOrMore(ID_ANNOTATION).bind(fields => {
     RIGHT_CURLY.and(ID.bind(name => {
@@ -109,7 +107,6 @@ object Token {
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
   private var expression: Parser[ASTNode] = BOOL.or(ASCII).or(id).or(NUMBER).or(NULL)
-
 
   private val arguments = (expression: Parser[ASTNode]) => expression.bind(arg => {
     Parser.zeroOrMore(COMMA.and(expression)).bind(args => {
@@ -194,15 +191,6 @@ object Token {
     Parser.constant(block)
   }))
 
-
-  //  lazy private val ifElseStatement: Parser[ASTNode] = ELSE.and(IF).and(LEFT_PAREN).bind(_ => expression.bind(cond => {
-  //    RIGHT_PAREN.and(blockStatement(statement).bind(block => {
-  //      ifElseStatement.or(elseStatement).bind(statement => {
-  //        Parser.constant(Conditional(cond, block, Some(statement)))
-  //      }).or(Parser.constant(Conditional(cond, block, None)))
-  //    }))
-  //  }))
-
   lazy private val ifElseStatement: Parser[ASTNode] = ELSE.and(ifStatement).or(elseStatement)
 
   lazy private val ifStatement: Parser[ASTNode] = IF.and(LEFT_PAREN).bind(_ => expression.bind(cond => {
@@ -214,7 +202,6 @@ object Token {
   }))
 
   statement = ifStatement.or(statement)
-
 
   lazy private val whileStatement: Parser[ASTNode] = WHILE.and(LEFT_PAREN).bind(_ => expression.bind(cond => {
     RIGHT_PAREN.and(blockStatement(statement).bind(block => {
@@ -234,7 +221,6 @@ object Token {
     LEFT_PAREN.and(paramsStatement).bind(params => {
       RIGHT_PAREN.and(ANNOTATION.bind(returnType => {
         blockStatement(statement).bind(body => {
-
           Parser.constant(Function(name, params.map(_._1), MajFuncType(returnType, params.map(_._2)), body))
         })
       }))
