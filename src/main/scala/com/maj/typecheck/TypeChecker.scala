@@ -12,7 +12,7 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
   private val controlFlowHandler = new ControlFlowTypeCheckHandler(this)
 
   override def visit(node: ASTNode): TypeNode = {
-    node match {
+    val out = node match {
       case (node: Function) => functionHandler.visit(node)
       case (node: Return) => functionHandler.visit(node)
       case (node: Block) => functionHandler.visit(node)
@@ -51,17 +51,23 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
 
       case _ => throw new RuntimeException("Not implemented")
     }
+
+    out match {
+      case MajVoidType() => out
+      case _ => println(node, out)
+    }
+    out
   }
 
   def assertType(expected: TypeNode, actual: TypeNode): Unit = {
-    val resolveType = (t: TypeNode) => {
+    def resolveType(t: TypeNode): TypeNode = {
       t match {
         case MajType(name) => this.getType(name)
         case _ => t
       }
     }
 
-    if (!expected.acceptsWithResolver(actual, resolveType) && !actual.acceptsWithResolver(expected, resolveType)) {
+    if (!(expected.acceptsWithResolver(actual, resolveType) || actual.acceptsWithResolver(expected, resolveType))) {
       throw new RuntimeException(s"Expected type $expected but got $actual")
     }
   }

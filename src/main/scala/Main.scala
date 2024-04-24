@@ -9,6 +9,7 @@ import com.maj.typecheck.BaseTypeChecker
 // TODO: Structs
 // TODO: Optimizations
 // TODO: Block Scope checking
+// TODO: ASM blocks
 
 object Main {
   def main(args: Array[String]): Unit = {

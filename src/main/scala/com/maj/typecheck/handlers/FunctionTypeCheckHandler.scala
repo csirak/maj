@@ -40,11 +40,30 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
       case MajFuncType(returnType, _) => typeChecker.assertType(returnType, nodeType)
       case _ => throw new RuntimeException("Return statement outside of scope")
     }
-    nodeType
+    MajReturnType(nodeType)
   }
 
   def visit(node: Block): TypeNode = {
-    node.statements.map(typeChecker.visit)
-    MajVoidType()
+    val returns = node.statements.map(typeChecker.visit).find {
+      case MajReturnType(_) => true
+      case MajConditionalReturn(_) => true
+      case _ => false
+    }
+
+    if (returns.isEmpty) {
+      MajVoidType()
+    } else {
+      var returnAggregator: TypeNode = returns.head
+      for (returnAble <- returns) {
+        returnAble match {
+          case MajReturnType(_) => return returnAggregator
+          case MajConditionalReturn(typ) => {
+            returnAggregator = MajTypeComposeOr(returnAggregator, typ)
+          }
+          case _ => throw new RuntimeException("Invalid return type")
+        }
+      }
+      returnAggregator
+    }
   }
 }
