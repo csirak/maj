@@ -14,21 +14,17 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
       case _ =>
         throw new RuntimeException("Too many arguments")
     }
-    emitter.emitLine(s"jal ${node.callee}")
+    emitter.emitLine(s"jal\t\t${node.callee}")
   }
 
-  private def manageStackForArgs(args: List[ASTNode]): Unit = {
-    emitter.emitLine(s"addi sp, sp, -${args.length * 8}")
-    args.zipWithIndex.foreach { case (arg, index) =>
-      codeGenerator.visit(arg)
-      emitter.emitLine(s"sd a0, ${index * 8}(sp)")
+  def visit(node: AsmBlock): Unit = {
+    node.statements.foreach { line =>
+      val cleaned = cleanAsm(line)
+      if (cleaned.nonEmpty) {
+        if (cleaned.contains(":")) emitter.emit(cleaned) else emitter.emitLine(cleaned)
+      }
     }
-    args.indices.foreach { index =>
-      emitter.emitLine(s"ld a$index, ${index * 8}(sp)")
-    }
-    emitter.emitLine(s"addi sp, sp, ${args.length * 8}")
   }
-
 
   def visit(node: Block): Unit = node.statements.foreach(codeGenerator.visit)
 
@@ -46,10 +42,10 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emit(s".global ${node.name}")
     emitter.emit(s"${node.name}:")
     emitter.emit(RiscVTemplates.functionPrologue)
-    emitter.emitLine(s"addi sp, sp, -${node.params.length * 8}")
+    emitter.emitLine(s"addi\t\tsp, sp, -${node.params.length * 8}")
 
     node.params.indices.foreach((index) => {
-      emitter.emitLine(s"sd a$index, ${index * 8}(sp)")
+      emitter.emitLine(s"sd\t\ta$index, ${index * 8}(sp)")
     })
     localCodeGen.visit(node.body)
     emitter.emit(RiscVTemplates.resetAndReturn)
@@ -63,4 +59,27 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     })
     codeGen
   }
+
+
+  private def manageStackForArgs(args: List[ASTNode]): Unit = {
+    emitter.emitLine(s"addi\t\tsp, sp, -${args.length * 8}")
+    args.zipWithIndex.foreach { case (arg, index) =>
+      codeGenerator.visit(arg)
+      emitter.emitLine(s"sd\t\ta0, ${index * 8}(sp)")
+    }
+    args.indices.foreach { index =>
+      emitter.emitLine(s"ld\t\ta$index, ${index * 8}(sp)")
+    }
+    emitter.emitLine(s"addi\t\tsp, sp, ${args.length * 8}")
+  }
+
+  private def cleanAsm(line: String): String = {
+    val regex = "\\s*(\\S+)\\s*".r
+    val matches = regex.findAllIn(line).matchData.map(_.group(1)).toList
+    if (matches.isEmpty) return ""
+    matches.head + "\t\t" + matches.tail.mkString(" ")
+
+  }
+
+
 }

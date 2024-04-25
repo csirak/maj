@@ -17,6 +17,7 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
       case (node: Return) => functionHandler.visit(node)
       case (node: Block) => functionHandler.visit(node)
       case (node: Call) => functionHandler.visit(node)
+      case (node: AsmBlock) => functionHandler.visit(node)
 
       case (node: Add) => operatorHandler.visit(node)
       case (node: Sub) => operatorHandler.visit(node)

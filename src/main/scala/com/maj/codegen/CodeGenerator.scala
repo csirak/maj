@@ -20,6 +20,7 @@ class CodeGenerator(parent: OffsetEnvironment = null)(implicit emitter: Emitter)
       case (node: Return) => functionsHandler.visit(node)
       case (node: Block) => functionsHandler.visit(node)
       case (node: Call) => functionsHandler.visit(node)
+      case (node: AsmBlock) => functionsHandler.visit(node)
 
       case (node: Add) => operatorsHandler.visit(node)
       case (node: Sub) => operatorsHandler.visit(node)

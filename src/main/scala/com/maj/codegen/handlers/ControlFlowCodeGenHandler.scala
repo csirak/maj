@@ -9,9 +9,9 @@ class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitt
     val ifFalseLabel = Label.next
     val endLabel = Label.next
     codeGenerator.visit(node.condition)
-    emitter.emitLine(s"beqz a0, $ifFalseLabel")
+    emitter.emitLine(s"beqz\t\ta0, $ifFalseLabel")
     codeGenerator.visit(node.ifTrue)
-    emitter.emitLine(s"j $endLabel")
+    emitter.emitLine(s"j\t\t$endLabel")
     emitter.emit(s"$ifFalseLabel:")
     node.elseIfTrue.foreach(codeGenerator.visit)
     emitter.emit(s"$endLabel:")
@@ -22,9 +22,9 @@ class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitt
     val endLabel = Label.next
     emitter.emit(s"$conditionLabel:")
     codeGenerator.visit(node.condition)
-    emitter.emitLine(s"beqz a0, $endLabel")
+    emitter.emitLine(s"beqz\t\ta0, $endLabel")
     codeGenerator.visit(node.body)
-    emitter.emitLine(s"j $conditionLabel")
+    emitter.emitLine(s"j\t\t$conditionLabel")
     emitter.emit(s"$endLabel:")
   }
 }

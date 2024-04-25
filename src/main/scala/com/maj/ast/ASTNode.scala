@@ -12,6 +12,8 @@ case class Return(val term: ASTNode) extends ASTNode
 
 case class Block(val statements: List[ASTNode]) extends ASTNode
 
+case class AsmBlock(val statements: List[String]) extends ASTNode
+
 case class Function(val name: String, val params: List[String], val signature: MajFuncType, val body: ASTNode) extends ASTNode
 
 case class MajInt(val value: Number) extends ASTNode
