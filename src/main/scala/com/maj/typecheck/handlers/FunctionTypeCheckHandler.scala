@@ -1,7 +1,7 @@
 package com.maj.typecheck.handlers
 
 import com.maj.ast._
-import com.maj.typecheck.TypeChecker
+import com.maj.typecheck._
 
 class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: Function): TypeNode = {
@@ -21,14 +21,14 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
 
   def visit(node: Call): TypeNode = {
     val expected = typeChecker.getType(node.callee)
-    if (expected == MajTypeUndefined()) {
+    if (expected.isEmpty) {
       throw new RuntimeException(s"Function ${node.callee} not found")
     }
-    val func = expected.asInstanceOf[MajFuncType]
+    val func = expected.get.asInstanceOf[MajFuncType]
     val args = node.args.map(typeChecker.visit)
-    val combined: List[(TypeNode, TypeNode)] = func.params.map(_.toString).map(typeChecker.getType).zipAll(args, MajTypeUndefined(), MajTypeUndefined())
+    val combined = func.params.map(_.toString).map(typeChecker.getType).zip(args)
     combined.foreach {
-      case (expected, actual) => typeChecker.assertType(expected, actual)
+      case (expected, actual) => typeChecker.assertType(expected.getOrElse(MajTypeUndefined()), actual)
     }
     typeChecker.getOrThrow(func.returnType.toString)
   }
@@ -37,7 +37,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     val nodeType = typeChecker.visit(node.term)
     val expectedScope = typeChecker.getType(typeChecker.scopeTag)
     expectedScope match {
-      case MajFuncType(returnType, _) => typeChecker.assertType(returnType, nodeType)
+      case Some(MajFuncType(returnType, _)) => typeChecker.assertType(returnType, nodeType)
       case _ => throw new RuntimeException("Return statement outside of scope")
     }
     nodeType

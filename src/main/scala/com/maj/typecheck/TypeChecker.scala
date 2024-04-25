@@ -15,7 +15,6 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
   addType("bool", MajBoolType())
   addType("void", MajVoidType())
   addType("char", MajTypeComposeOr(MajCharType(), MajIntType()))
-  addType("putchar", MajFuncType(MajType("void"), List(MajType("char"))))
 
   override def visit(node: ASTNode): TypeNode = {
     node match {
@@ -49,22 +48,21 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
       case (node: MajChar) => scalarHandler.visit(node)
 
       case (node: Assign) => variableHandler.visit(node)
-      case (node: Create) => variableHandler.visit(node)
+      case (node: MutableVar) => variableHandler.visit(node)
       case (node: Iden) => variableHandler.visit(node)
+      case (node: ConstVar) => variableHandler.visit(node)
       case (node: TypeDef) => variableHandler.visit(node)
 
       case (node: Conditional) => controlFlowHandler.visit(node)
       case (node: Loop) => controlFlowHandler.visit(node)
-
-      case _ => throw new RuntimeException("Not implemented")
     }
   }
 
   def assertType(expected: TypeNode, actual: TypeNode): Unit = {
-    def resolveType(t: TypeNode): TypeNode = {
+    def resolveType(t: TypeNode): Option[TypeNode] = {
       t match {
         case MajType(name) => this.getType(name)
-        case _ => t
+        case _ => Some(t)
       }
     }
 

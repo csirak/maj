@@ -2,7 +2,7 @@ package com.maj.codegen.handlers
 
 import com.maj.ast._
 import com.maj.codegen._
-import com.maj.codegen.emitters.Emitter
+import com.maj.emitters.Emitter
 
 class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: Call): Unit = {
@@ -51,15 +51,11 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emit(RiscVTemplates.resetAndReturn)
   }
 
-
   private def setupLocalCodeGen(node: Function): CodeGenerator = {
     val codeGen = new CodeGenerator(codeGenerator)
-    node.params.foreach(param => {
-      codeGen.addLocalWithOffset(param, 8)
-    })
+    node.params.foreach(codeGen.addLocalWithOffset(_, 8))
     codeGen
   }
-
 
   private def manageStackForArgs(args: List[ASTNode]): Unit = {
     emitter.emitLine(s"addi\t\tsp, sp, -${args.length * 8}")
@@ -78,8 +74,5 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     val matches = regex.findAllIn(line).matchData.map(_.group(1)).toList
     if (matches.isEmpty) return ""
     matches.head + "\t\t" + matches.tail.mkString(" ")
-
   }
-
-
 }

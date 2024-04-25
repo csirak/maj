@@ -1,7 +1,7 @@
 package com.maj.typecheck.handlers
 
 import com.maj.ast._
-import com.maj.typecheck.{BaseTypeChecker, TypeChecker}
+import com.maj.typecheck.{BaseTypeChecker, MajBoolType, MajTypeComposeOr, TypeChecker}
 
 class OperatorTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: Not): MajBoolType = {

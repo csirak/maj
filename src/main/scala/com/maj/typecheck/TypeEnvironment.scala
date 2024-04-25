@@ -1,7 +1,5 @@
 package com.maj.typecheck
 
-import com.maj.ast.{MajTypeUndefined, TypeNode}
-
 class TypeEnvironment(val parent: TypeEnvironment = null) {
   private var types: Map[String, TypeNode] = Map()
 
@@ -9,13 +7,13 @@ class TypeEnvironment(val parent: TypeEnvironment = null) {
     types += (name -> t)
   }
 
-  def getType(name: String): TypeNode = {
-    types.getOrElse(name, getParent(name))
+  def getType(name: String): Option[TypeNode] = {
+    types.get(name).orElse(getParent(name))
   }
 
-  def getParent(name: String): TypeNode = {
+  private def getParent(name: String): Option[TypeNode] = {
     if (parent == null) {
-      MajTypeUndefined()
+      None
     } else {
       parent.getType(name)
     }
@@ -23,8 +21,8 @@ class TypeEnvironment(val parent: TypeEnvironment = null) {
 
   def getOrThrow(name: String): TypeNode = {
     this.getType(name) match {
-      case MajTypeUndefined() => throw new RuntimeException(s"Type $name not found")
-      case t => t
+      case None => throw new RuntimeException(s"Type $name not found")
+      case Some(t) => t
     }
   }
 }

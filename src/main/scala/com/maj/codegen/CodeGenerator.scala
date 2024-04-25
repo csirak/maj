@@ -2,8 +2,8 @@ package com.maj.codegen
 
 import com.maj.Visitor
 import com.maj.ast._
-import com.maj.codegen.emitters.Emitter
 import com.maj.codegen.handlers._
+import com.maj.emitters.Emitter
 
 class CodeGenerator(parent: OffsetEnvironment = null)(implicit emitter: Emitter) extends OffsetEnvironment(parent) with Visitor[Unit] {
   private val functionsHandler = new FunctionCodeGenHandler(this)
@@ -44,9 +44,10 @@ class CodeGenerator(parent: OffsetEnvironment = null)(implicit emitter: Emitter)
       case (node: MajChar) => scalarsHandler.visit(node)
 
       case (node: Assign) => variablesHandler.visit(node)
-      case (node: Create) => variablesHandler.visit(node)
+      case (node: MutableVar) => variablesHandler.visit(node)
       case (node: Iden) => variablesHandler.visit(node)
       case (node: TypeDef) => variablesHandler.visit(node)
+      case (node: ConstVar) => variablesHandler.visit(node)
 
       case (node: Conditional) => controlFlowHandler.visit(node)
       case (node: Loop) => controlFlowHandler.visit(node)

@@ -1,15 +1,17 @@
-package com.maj.ast
+package com.maj.typecheck
+
+import com.maj.ast.Operator
 
 sealed trait TypeNode {
   def accepts(other: TypeNode): Boolean = {
     this == other
   }
 
-  def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
+  def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = {
     resolver(this) match {
-      case (node: TypeOperator) => node.acceptsWithResolver(other, resolver)
-      case _ => this.accepts(other)
-
+      case Some(node: TypeOperator) => node.acceptsWithResolver(other, resolver)
+      case Some(node) => node.accepts(other)
+      case None => false
     }
   }
 }
@@ -34,7 +36,7 @@ case class MajFuncType(val returnType: TypeNode, val params: List[TypeNode]) ext
     }
   }
 
-  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
+  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = {
     other match {
       case MajFuncType(otherReturnType, otherParams) => {
         returnType.acceptsWithResolver(otherReturnType, resolver) && params.zip(otherParams).forall {
@@ -44,6 +46,13 @@ case class MajFuncType(val returnType: TypeNode, val params: List[TypeNode]) ext
       case _ => false
     }
   }
+}
+
+
+case class MajConstant(val typ: TypeNode) extends TypeNode {
+  override def accepts(other: TypeNode): Boolean = typ.accepts(other)
+
+  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = typ.acceptsWithResolver(other, resolver)
 }
 
 case class MajStruct(val name: String, val fields: Map[String, String]) extends TypeNode
@@ -59,8 +68,11 @@ abstract class ReturnableType extends TypeNode {
     returnType.accepts(other)
   }
 
-  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
-    returnType.acceptsWithResolver(resolver(other), resolver)
+  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = {
+    resolver(other) match {
+      case Some(node: TypeOperator) => node.acceptsWithResolver(other, resolver)
+      case None => false
+    }
   }
 }
 
@@ -81,17 +93,23 @@ case class MajTypeComposeOr(left: TypeNode = null, right: TypeNode = null) exten
     other.accepts(left) || other.accepts(right)
   }
 
-  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
-    other.acceptsWithResolver(resolver(left), resolver) || other.acceptsWithResolver(resolver(right), resolver)
+  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = {
+    resolver(other) match {
+      case Some(node) => node.acceptsWithResolver(left, resolver) || node.acceptsWithResolver(right, resolver)
+    }
   }
 
   override def get(left: TypeNode, right: TypeNode): TypeOperator = MajTypeComposeOr(left, right)
 }
 
 case class MajTypeComposeAnd(left: TypeNode = null, right: TypeNode = null) extends TypeOperator {
-  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => TypeNode): Boolean = {
-    resolver(other).acceptsWithResolver(resolver(left), resolver) && other.acceptsWithResolver(resolver(right), resolver)
-  }
+
 
   override def get(left: TypeNode, right: TypeNode): TypeOperator = MajTypeComposeAnd(left, right)
+
+  override def acceptsWithResolver(other: TypeNode, resolver: (TypeNode) => Option[TypeNode]): Boolean = {
+    resolver(other) match {
+      case Some(node) => node.acceptsWithResolver(left, resolver) && node.acceptsWithResolver(right, resolver)
+    }
+  }
 }

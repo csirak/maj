@@ -17,47 +17,6 @@ halt:
         j      halt
 
 		
-.global assert
-assert:
-
-        addi   sp, sp, -16
-        sd     ra, 8(sp)
-        sd     fp, 0(sp)
-        mv     fp, sp
-
-		addi		sp, sp, -8
-		sd		a0, 0(sp)
-		ld		a0, -8(fp)
-		beqz		a0, .L1
-		li		a0, '.'
-		jal		putchar
-		li		a0, 1
-
-        mv     sp, fp
-        ld     ra, 8(sp)
-        ld     fp, 0(sp)
-        addi   sp, sp, 16
-        ret
-
-		j		.L2
-.L1:
-.L2:
-		li		a0, 0
-
-        mv     sp, fp
-        ld     ra, 8(sp)
-        ld     fp, 0(sp)
-        addi   sp, sp, 16
-        ret
-
-
-        mv     sp, fp
-        ld     ra, 8(sp)
-        ld     fp, 0(sp)
-        addi   sp, sp, 16
-        ret
-
-		
 .global putchar
 putchar:
 
@@ -75,6 +34,39 @@ putchar:
 		and		t1, t1, t2
 		bnez		t1, .Lputchar_loop # if TX FIFO is full, wait
 		sw		a0, UART_REG_TXFIFO(t0) # write character to TX FIFO
+
+        mv     sp, fp
+        ld     ra, 8(sp)
+        ld     fp, 0(sp)
+        addi   sp, sp, 16
+        ret
+
+		
+.global assert
+assert:
+
+        addi   sp, sp, -16
+        sd     ra, 8(sp)
+        sd     fp, 0(sp)
+        mv     fp, sp
+
+		addi		sp, sp, -8
+		sd		a0, 0(sp)
+		ld		a0, -8(fp)
+		beqz		a0, .L1
+		li		a0, '.'
+		jal		putchar
+		li		a0, 0
+
+        mv     sp, fp
+        ld     ra, 8(sp)
+        ld     fp, 0(sp)
+        addi   sp, sp, 16
+        ret
+
+		j		.L2
+.L1:
+.L2:
 
         mv     sp, fp
         ld     ra, 8(sp)
@@ -145,9 +137,9 @@ main:
 		li		a0, 20
 		li		a0, 10
 		li		a0, 5
-		ld		a0, -8(fp)
+		li		a0, 20
 		jal		fact
-		ld		a0, -16(fp)
+		ld		a0, -8(fp)
 		addi		sp, sp, -8
 		sd		a0, 0(sp)
 		li		a0, 12
@@ -156,7 +148,7 @@ main:
 		addi		sp, sp, 8
 		add		a0, a0, a1
 		jal		fact
-		ld		a0, -24(fp)
+		ld		a0, -16(fp)
 		jal		fact
 		j		halt
 		li		a0, 1

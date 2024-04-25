@@ -1,4 +1,4 @@
-package com.maj.codegen.emitters
+package com.maj.emitters
 
 trait Emitter {
   def emit(output: String): Unit

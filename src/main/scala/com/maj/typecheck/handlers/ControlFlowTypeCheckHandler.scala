@@ -1,7 +1,7 @@
 package com.maj.typecheck.handlers
 
 import com.maj.ast._
-import com.maj.typecheck.TypeChecker
+import com.maj.typecheck._
 
 class ControlFlowTypeCheckHandler(val typeChecker: TypeChecker) {
   def visit(node: Conditional): TypeNode = {

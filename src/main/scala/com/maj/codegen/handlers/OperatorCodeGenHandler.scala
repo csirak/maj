@@ -1,8 +1,8 @@
 package com.maj.codegen.handlers
 
 import com.maj.ast._
-import com.maj.codegen.emitters.Emitter
 import com.maj.codegen.{CodeGenerator, RiscVTemplates}
+import com.maj.emitters.Emitter
 
 class OperatorCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   private def binaryOpPrologue(node: AstOperator): Unit = {

@@ -2,7 +2,7 @@ package com.maj.codegen.handlers
 
 import com.maj.ast.{MajBool, MajChar, MajInt, MajNull}
 import com.maj.codegen.CodeGenerator
-import com.maj.codegen.emitters.Emitter
+import com.maj.emitters.Emitter
 
 class ScalarCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
   def visit(node: MajInt): Unit = {

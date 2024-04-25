@@ -1,6 +1,6 @@
 package com.maj.parser
 
-import com.maj.ast.ASTNode
+import com.maj.ast.{ASTNode, Block}
 
 import scala.annotation.tailrec
 
@@ -15,6 +15,14 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
       result.orElse(parser.parse(source))
     })
   }
+
+  def or[U >: T](parsers: List[Parser[U]]): Parser[U] = {
+    if (parsers.isEmpty) {
+      throw new Exception("Cannot or an empty list of parsers")
+    }
+    parsers.foldLeft(parsers.head)((acc, parser) => acc.or(parser))
+  }
+
 
   def and[U](parser: Parser[U]): Parser[U] = {
     bind(_ => parser())
@@ -45,7 +53,7 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
 
   def flatMap[U]: (T => Parser[U]) => Parser[U] = bind[U]
 
-  def parseToCompletion(string: String, log: Boolean = false): T = {
+  private def parseToCompletion(string: String, log: Boolean = false): T = {
     val source = Source(string, 0, log)
     parse(source) match {
       case Some(ParseResult(value, remainingSource)) => if (remainingSource.atEnd()) value else throw new Exception(s"Parse error: Incomplete input at index ${remainingSource.index}\n Remaining input: ${remainingSource}")
@@ -65,13 +73,16 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
     recursiveParse(source, List.empty)
   })
 
-  def parseFile(path: String): ASTNode = {
+  private def stdLib = parseFile("src/main/resources/stdlib.maj")
+
+  def parseFile(path: String, log: Boolean = false): Block = {
     val sourceFile = scala.io.Source.fromFile(path, "utf-8")
     val lines = sourceFile.getLines.mkString("\n")
-    val ast = Token.parser.parseToCompletion(lines)
     sourceFile.close()
-    ast
+    Token.parser.parseToCompletion(lines, log)
   }
+
+  def parseWithStdLib(path: String, log: Boolean = false): ASTNode = stdLib ++ parseFile(path, log)
 }
 
 

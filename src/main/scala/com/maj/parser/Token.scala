@@ -1,6 +1,7 @@
 package com.maj.parser
 
 import com.maj.ast._
+import com.maj.typecheck._
 
 
 object Token {
@@ -8,8 +9,11 @@ object Token {
     source.check(s.r)
   })
 
-  private val WHITESPACE = regexp("[ \\n\\r\\t]+")
-  private val COMMENTS = regexp("//.*/").or(regexp("/*.*[*]/"))
+  val whitespaceRegex = "[ \\n\\r\\t]+"
+  val singleCommentRegex = "//.*/"
+  val multiCommentRegex = "/*.*[*]/"
+  private val WHITESPACE = regexp(whitespaceRegex)
+  private val COMMENTS = regexp(singleCommentRegex).or(regexp(multiCommentRegex))
   private val IGNORED = WHITESPACE.or(COMMENTS).zeroOrMore
 
   private def clean(pattern: String) = {
@@ -32,6 +36,7 @@ object Token {
   private val STRUCT = clean("struct")
   private val TYPE = clean("type")
   private val ASM = clean("asm")
+  private val CONST = clean("const")
   private val LINE = clean("[^}]*")
 
   // Punctuation
@@ -39,16 +44,16 @@ object Token {
   private val ASSIGN = clean("=")
   private val SEMICOLON = clean(";")
   private val COLON = clean(":")
-  private val LEFT_PAREN: Parser[String] = clean("\\(")
-  private val RIGHT_PAREN: Parser[String] = clean("\\)")
+  private val LEFT_PAREN = clean("\\(")
+  private val RIGHT_PAREN = clean("\\)")
   private val LEFT_CURLY = clean("\\{")
   private val RIGHT_CURLY = clean("\\}")
 
   // Operators
   private val SINGLE_AND = clean("\\&").map(_ => MajTypeComposeAnd())
   private val SINGLE_OR = clean("\\|").map(_ => MajTypeComposeOr())
-  private val NOT: Parser[Not] = clean("\\!").map(_ => Not())
 
+  private val NOT = clean("\\!").map(_ => Not())
   private val EQUAL: Parser[AstOperator] = clean("==").map(_ => Equals())
   private val GTOREQ: Parser[AstOperator] = clean(">=").map(_ => GreaterThanOrEquals())
   private val LTOREQ: Parser[AstOperator] = clean("<=").map(_ => LessThanOrEquals())
@@ -120,7 +125,7 @@ object Token {
 
 
   private val id: Parser[ASTNode] = ID.map(name => Iden(name))
-  private var expression: Parser[ASTNode] = BOOL.or(ASCII).or(id).or(NUMBER).or(NULL)
+  private var expression: Parser[ASTNode] = BOOL.or(List(ASCII, id, NUMBER, NULL))
 
   private def arguments(expression: Parser[ASTNode]): Parser[List[ASTNode]] = for {
     firstArg <- expression.optional[ASTNode]
@@ -173,7 +178,7 @@ object Token {
   expression = product.or(expression)
   private val sum = infix(ADD.or(SUB), expression)
   expression = sum.or(expression)
-  private val comparison = infix(EQUAL.or(NEQ).or(GTOREQ.or(LTOREQ).or(GREATER).or(LESS).or(AND).or(OR)), expression)
+  private val comparison = infix(EQUAL.or(List(NEQ, GTOREQ, LTOREQ, GREATER, LESS, AND, OR)), expression)
 
   expression = comparison.or(expression)
 
@@ -184,6 +189,11 @@ object Token {
     _ <- RETURN
     exp <- expressionStatement
   } yield Return(exp)
+
+  private val returnVoidStatement = for {
+    _ <- RETURN
+    _ <- SEMICOLON
+  } yield Return(MajNull());
 
 
   private val typeStatement = for {
@@ -199,10 +209,16 @@ object Token {
     name <- ID
     _ <- ASSIGN
     value <- expressionStatement
-  } yield Create(name, value)
+  } yield MutableVar(name, value)
 
+  private val constStatement: Parser[ASTNode] = for {
+    _ <- CONST
+    name <- ID
+    _ <- ASSIGN
+    value <- expressionStatement
+  } yield ConstVar(name, value)
 
-  private var statement: Parser[ASTNode] = returnStatement.or(typeStatement).or(varStatement).or(expressionStatement)
+  private var statement: Parser[ASTNode] = returnStatement.or(List(returnVoidStatement, typeStatement, constStatement, varStatement, expressionStatement))
 
   private val assignStatement = for {
     name <- ID

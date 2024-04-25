@@ -1,5 +1,7 @@
 package com.maj.ast
 
+import com.maj.typecheck.{MajFuncType, TypeNode}
+
 sealed trait ASTNode
 
 case class Conditional(val condition: ASTNode, val ifTrue: ASTNode, val elseIfTrue: Option[ASTNode] = None) extends ASTNode
@@ -10,7 +12,9 @@ case class Call(val callee: String, val args: List[ASTNode]) extends ASTNode
 
 case class Return(val term: ASTNode) extends ASTNode
 
-case class Block(val statements: List[ASTNode]) extends ASTNode
+case class Block(val statements: List[ASTNode]) extends ASTNode {
+  def ++(other: Block): Block = Block(statements ++ other.statements)
+}
 
 case class AsmBlock(val statements: List[String]) extends ASTNode
 
@@ -26,7 +30,9 @@ case class MajChar(val value: Char) extends ASTNode
 
 case class Assign(val name: String, val value: ASTNode) extends ASTNode
 
-case class Create(val name: String, val value: ASTNode) extends ASTNode
+case class MutableVar(val name: String, val value: ASTNode) extends ASTNode
+
+case class ConstVar(val name: String, val value: ASTNode) extends ASTNode
 
 case class Iden(val value: String) extends ASTNode
 
