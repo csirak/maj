@@ -44,30 +44,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   }
 
   def visit(node: Block): TypeNode = {
-<<<<<<< Updated upstream
     node.statements.map(typeChecker.visit)
-=======
-    val returns = node.statements.flatMap(stmt => typeChecker.visit(stmt) match {
-      case ret@(MajReturnType(_) | MajConditionalReturn(_)) => Some(ret)
-      case _ => None
-    })
-
-
-    val out = if (returns.isEmpty) MajVoidType()
-    else {
-      returns.foldLeft[TypeNode](MajVoidType())((acc, ret) => ret match {
-        case MajReturnType(ret) if acc == MajVoidType() => ret
-        case MajReturnType(ret) => MajTypeComposeOr(acc, ret)
-        case MajConditionalReturn(typ) if acc == MajVoidType() => typ
-        case MajConditionalReturn(typ) => MajTypeComposeOr(acc, typ)
-      })
-    }
-    MajReturnType(out)
-  }
-
-  def visit(node: AsmBlock): TypeNode = {
-    println("WARNING: ASM block not type checked")
->>>>>>> Stashed changes
     MajVoidType()
   }
 }

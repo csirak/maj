@@ -2,26 +2,31 @@ import com.maj.ast.ASTNode
 import com.maj.codegen.CodeGenerator
 import com.maj.codegen.emitters.StringBufferEmitter
 import com.maj.parser._
-import com.maj.typecheck.BaseTypeChecker
+import com.maj.typecheck.TypeChecker
 
 
 // TODO: Pointers and references
 // TODO: Structs
 // TODO: Optimizations
-// TODO: Block Scope checking
+// TODO: ASM blocks
 
 object Main {
   def main(args: Array[String]): Unit = {
+    compile("src/main/resources/test.maj", "src/main/resources/hello")
+  }
+
+  def compile(file: String, output: String): Unit = {
     implicit val emitter: StringBufferEmitter = new StringBufferEmitter()
-    val sourceFile = scala.io.Source.fromFile("src/main/resources/test.maj", "utf-8")
-    val lines = sourceFile.getLines.mkString("\n")
-    val ast: ASTNode = Token.parser.parseToCompletion(lines)
+
     val codeGen = new CodeGenerator()
-    val typeCheck = BaseTypeChecker()
+    val typeCheck = new TypeChecker()
+
+    val ast: ASTNode = Token.parser.parseFile(file)
+
     typeCheck.visit(ast)
     codeGen.visit(ast)
-    emitter.writeToFile("src/main/resources/hello.s")
-    sourceFile.close()
+
+    emitter.writeToFile(s"$output.s")
   }
 }
 

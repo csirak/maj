@@ -11,6 +11,12 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
   private val functionHandler = new FunctionTypeCheckHandler(this)
   private val controlFlowHandler = new ControlFlowTypeCheckHandler(this)
 
+  addType("int", MajIntType())
+  addType("bool", MajBoolType())
+  addType("void", MajVoidType())
+  addType("char", MajTypeComposeOr(MajCharType(), MajIntType()))
+  addType("putchar", MajFuncType(MajType("void"), List(MajType("char"))))
+
   override def visit(node: ASTNode): TypeNode = {
     node match {
       case (node: Function) => functionHandler.visit(node)
@@ -55,14 +61,14 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
   }
 
   def assertType(expected: TypeNode, actual: TypeNode): Unit = {
-    val resolveType = (t: TypeNode) => {
+    def resolveType(t: TypeNode): TypeNode = {
       t match {
         case MajType(name) => this.getType(name)
         case _ => t
       }
     }
 
-    if (!expected.acceptsWithResolver(actual, resolveType) && !actual.acceptsWithResolver(expected, resolveType)) {
+    if (!(expected.acceptsWithResolver(actual, resolveType) || actual.acceptsWithResolver(expected, resolveType))) {
       throw new RuntimeException(s"Expected type $expected but got $actual")
     }
   }
@@ -70,15 +76,6 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
 
 
 object BaseTypeChecker {
-  def apply(): TypeChecker = {
-    val typeChecker = new TypeChecker()
-    typeChecker.addType("int", MajIntType())
-    typeChecker.addType("bool", MajBoolType())
-    typeChecker.addType("void", MajVoidType())
-    typeChecker.addType("putchar", MajFuncType(MajType("void"), List(MajType("int"))))
-    typeChecker
-  }
-
   val boolOrInt: MajTypeComposeOr = MajTypeComposeOr(MajIntType(), MajBoolType())
 
 }

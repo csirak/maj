@@ -1,11 +1,11 @@
 type number: bool | int;
 
-func assert(cond: bool): void {
+func assert(cond: bool): number {
     if (cond) {
         putchar('.');
-    } else{
-        putchar('F');
+        return 1;
     }
+    return false;
 }
 
 func putchar(letter: char): void{
