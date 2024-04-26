@@ -43,18 +43,6 @@ class IRGenerator(parent: IREnviroment = null)(implicit emitter: Emitter[IRNode]
 
   }
 
-  private def handleAssign(node: Assignable): Option[IRNode] = {
-    val anonRef = visit(node.value).getOrElse(throw new Exception("VariableIRGenHandler: Assign: Value not found"))
-    val namedRef = node match {
-      case Assign(name, _) => getVar(name)
-      // const and var
-      case node => addVar(node.name)
-    }
-    emitter.emit(AssignIR(namedRef, anonRef))
-    None
-  }
-
-
   def assignToAnonVarAndEmit(value: IRNode): IdenIR = {
     val anonRef = addAnonVar()
     emitter.emit(AssignIR(anonRef, value))
@@ -62,9 +50,17 @@ class IRGenerator(parent: IREnviroment = null)(implicit emitter: Emitter[IRNode]
   }
 
   def getResultInAnonVar(value: Option[IRNode]): IdenIR = {
-    value.getOrElse(throw new Exception(s"IRGenerator: Operator: Left not found ${value}")) match {
+    getResultInAnonOrScalar(value) match {
       case node: IdenIR => node
       case node: ScalarIR => assignToAnonVarAndEmit(node)
+      case _ => throw new Exception(s"IRGenerator: Invalid Value: Not operation, variable, or scalar $value")
+    }
+  }
+
+  def getResultInAnonOrScalar(value: Option[IRNode]): IRNode = {
+    value.getOrElse(throw new Exception(s"IRGenerator: Operator: Left not found ${value}")) match {
+      case node: IdenIR => node
+      case node: ScalarIR => node
       case node: NotIR => assignToAnonVarAndEmit(node)
       case node: WrappedOperatorIR => assignToAnonVarAndEmit(node)
       case _ => throw new Exception(s"IRGenerator: Invalid Value: Not operation, variable, or scalar $value")

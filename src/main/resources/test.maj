@@ -1,28 +1,13 @@
-type number: bool | int;
 
-func fact(n: int): void {
-    if(n >= 20) {
-        putchar('2');
-    } else if(n >= 10){
-        putchar('1');
-    } else {
-        putchar('0');
-    }
-}
 
 func main(): void {
     const x = 20;
     var y = 10;
-    var z = 5;
-
-    fact((x));
-    fact(y+12);
-    fact(z);
-
-    asm {
-        j halt
-        li a0, 1
-    }
+    var z = x + y;
+    y = (y + 1);
+    const b = y;
+    var a = x + y;
+    y = y + 1;
 }
 
 

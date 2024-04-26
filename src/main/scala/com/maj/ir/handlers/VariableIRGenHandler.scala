@@ -9,11 +9,19 @@ class VariableIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
   def handle(node: Assignable): Option[IRNode] = {
     val anonRef = irGenerator.visit(node.value).getOrElse(throw new Exception("VariableIRGenHandler: Assign: Value not found"))
     val namedRef = node match {
-      case Assign(name, _) => irGenerator.getVar(name)
+      case Assign(name, _) => Some(irGenerator.getVar(name))
       // const and var
-      case node => irGenerator.addVar(node.name)
+      case MutableVar(name, _) => Some(irGenerator.addVar(name))
+      case ConstVar(_, _) => None
+
+      case _ => throw new Exception("Assignable not implemented")
     }
-    emitter.emit(AssignIR(namedRef, anonRef))
+
+    if (namedRef.isEmpty) {
+      irGenerator.addConst(node.name, anonRef)
+    } else {
+      emitter.emit(AssignIR(namedRef.get, anonRef))
+    }
     None
   }
 }

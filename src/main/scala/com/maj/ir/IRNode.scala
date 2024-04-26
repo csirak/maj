@@ -11,14 +11,14 @@ case class NullIR() extends IRNode {
 }
 
 case class ScalarIR(value: Scalar) extends IRNode {
-  override def toString: String = value.value.toString
+  override def toString: String = if (value.value == null) "null" else value.value.toString
 }
 
 case class IdenIR(val symbolIndex: Int) extends IRNode {
   override def toString: String = s"t$symbolIndex"
 }
 
-case class NotIR(val value: IdenIR) extends IRNode {
+case class NotIR(val value: IRNode) extends IRNode {
   override def toString: String = s"!$value"
 }
 
@@ -52,7 +52,7 @@ case class ReturnIR(val term: IRNode) extends IRNode {
 
 
 case class ASMBlockIR(val statements: List[String]) extends IRNode {
-  override def toString: String = "\n" ++ statements.mkString("\n")
+  override def toString: String = "asm { \n" ++ statements.mkString("\n") ++ "}"
 }
 
 case class WrappedOperatorIR(val operator: Operator[ASTNode], left: IRNode, right: IRNode) extends IRNode {

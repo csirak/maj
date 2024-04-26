@@ -35,7 +35,6 @@ case class MajNull() extends Scalar {
 
 case class MajChar(val value: Char) extends Scalar
 
-
 sealed trait Assignable extends ASTNode {
   def name: String
 

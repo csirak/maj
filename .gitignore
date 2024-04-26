@@ -11,3 +11,5 @@
 
 **/target/
 **/project
+**/*.s
+**/*.maj.ir

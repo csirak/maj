@@ -8,15 +8,15 @@ class OperatorIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
   def handle(node: Operator[ASTNode]): Option[IRNode] = {
     val left = irGenerator.visit(node.left)
     val right = irGenerator.visit(node.right)
-    val leftRef = irGenerator.getResultInAnonVar(left)
-    val rightRef = irGenerator.getResultInAnonVar(right)
+    val leftRef = irGenerator.getResultInAnonOrScalar(left)
+    val rightRef = irGenerator.getResultInAnonOrScalar(right)
     val anonRef = irGenerator.assignToAnonVarAndEmit(WrappedOperatorIR(node.getType, leftRef, rightRef))
     Some(anonRef)
   }
 
   def handle(node: Not): Option[IRNode] = {
     val value = irGenerator.visit(node.value)
-    val valueRef = irGenerator.getResultInAnonVar(value)
+    val valueRef = irGenerator.getResultInAnonOrScalar(value)
     val anonRef = irGenerator.assignToAnonVarAndEmit(NotIR(valueRef))
     Some(anonRef)
   }
