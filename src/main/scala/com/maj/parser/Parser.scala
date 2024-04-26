@@ -75,7 +75,7 @@ class Parser[+T](val parse: Source => Option[ParseResult[T]]) {
 
   private def stdLib = parseFile("src/main/resources/stdlib.maj")
 
-  def parseFile(path: String, log: Boolean = false): Block = {
+  private def parseFile(path: String, log: Boolean = false): Block = {
     val sourceFile = scala.io.Source.fromFile(path, "utf-8")
     val lines = sourceFile.getLines.mkString("\n")
     sourceFile.close()

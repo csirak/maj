@@ -7,22 +7,22 @@ import com.maj.ir._
 class FunctionIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitter[IRNode]) {
   def handle(node: Function): Option[IRNode] = {
     val params = node.params.map(irGenerator.addVar)
-    emitter.emit(FuncIR(node.name, params))
+    emitter.emit(IRFunc(node.name, params))
     irGenerator.visit(node.body)
-    emitter.emit(ReturnIR(NullIR()))
+    emitter.emit(IRReturn(IRNull()))
     None
   }
 
   def handle(node: Call): Option[IRNode] = {
     val args = node.args.map(irGenerator.visit).map(irGenerator.getResultInAnonVar)
-    emitter.emit(CallIR(node.callee, args))
+    emitter.emit(IRCall(node.callee, args))
     None
   }
 
   def handle(node: Return): Option[IRNode] = {
     val term = irGenerator.visit(node.term)
     val result = irGenerator.getResultInAnonOrScalar(term)
-    emitter.emit(ReturnIR(result))
+    emitter.emit(IRReturn(result))
     None
   }
 
@@ -32,7 +32,7 @@ class FunctionIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
   }
 
   def handle(node: AsmBlock): Option[IRNode] = {
-    emitter.emit(ASMBlockIR(node.statements))
+    emitter.emit(IRAsmBlock(node.statements))
     None
   }
 

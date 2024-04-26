@@ -6,16 +6,16 @@ import com.maj.typecheck._
 class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   def handle(node: Function): TypeNode = {
     typeChecker.addType(node.name, node.signature)
-    val localTypeCheck = new TypeChecker(node.name, typeChecker)
+    typeChecker.setScope(node.name)
     val argTypes = node.signature.params
     val args = node.params
     args.zip(argTypes).foreach {
       case (arg, argType) => {
-        val typ = localTypeCheck.getOrThrow(argType.toString)
-        localTypeCheck.addType(arg, typ)
+        val typ = typeChecker.getTypeOrThrow(argType.toString)
+        typeChecker.addType(arg, typ)
       }
     }
-    localTypeCheck.visit(node.body)
+    typeChecker.visit(node.body)
     node.signature
   }
 
@@ -30,13 +30,19 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     combined.foreach {
       case (expected, actual) => typeChecker.assertType(expected.getOrElse(MajTypeUndefined()), actual)
     }
-    typeChecker.getOrThrow(func.returnType.toString)
+    typeChecker.getTypeOrThrow(func.returnType.toString)
   }
 
   def handle(node: Return): TypeNode = {
     val nodeType = typeChecker.visit(node.term)
-    val expectedScope = typeChecker.getType(typeChecker.scopeTag)
-    expectedScope match {
+
+
+    val scopedReturn = for {
+      name <- typeChecker.getScope
+      scopeReturnType <- typeChecker.getType(name)
+    } yield scopeReturnType
+
+    scopedReturn match {
       case Some(MajFuncType(returnType, _)) => typeChecker.assertType(returnType, nodeType)
       case _ => throw new RuntimeException("Return statement outside of scope")
     }
@@ -45,11 +51,11 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
 
 
   def handle(node: Block): TypeNode = {
-    val returns = node.statements.flatMap(stmt => typeChecker.visit(stmt) match {
+    val scopedChecker = new TypeChecker(typeChecker)
+    val returns = node.statements.flatMap(stmt => scopedChecker.visit(stmt) match {
       case ret@(MajReturnType(_) | MajConditionalReturn(_)) => Some(ret)
       case _ => None
     })
-
 
     val out = if (returns.isEmpty) MajVoidType()
     else {

@@ -6,7 +6,7 @@ import com.maj.typecheck.{MajConstant, MajVoidType, TypeChecker, TypeNode}
 class VariableTypeCheckHandler(val typeChecker: TypeChecker) {
 
   def handle(node: Assign): TypeNode = {
-    val typ = typeChecker.getOrThrow(node.name)
+    val typ = typeChecker.getTypeOrThrow(node.name)
     typeChecker.assertType(typ, typeChecker.visit(node.value))
     MajVoidType()
   }

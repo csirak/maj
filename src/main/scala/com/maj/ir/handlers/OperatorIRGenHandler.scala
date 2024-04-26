@@ -2,7 +2,7 @@ package com.maj.ir.handlers
 
 import com.maj.ast._
 import com.maj.emitters.Emitter
-import com.maj.ir.{IRGenerator, IRNode, NotIR, WrappedOperatorIR}
+import com.maj.ir.{IRGenerator, IRNode, IRNot, IROperator}
 
 class OperatorIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitter[IRNode]) {
   def handle(node: Operator[ASTNode]): Option[IRNode] = {
@@ -10,13 +10,13 @@ class OperatorIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
     val right = irGenerator.visit(node.right)
     val leftRef = irGenerator.getResultInAnonOrScalar(left)
     val rightRef = irGenerator.getResultInAnonOrScalar(right)
-    Some(WrappedOperatorIR(node.getType, leftRef, rightRef))
+    Some(IROperator(node.getType, leftRef, rightRef))
   }
 
   def handle(node: Not): Option[IRNode] = {
     val value = irGenerator.visit(node.value)
     val valueRef = irGenerator.getResultInAnonOrScalar(value)
-    Some(NotIR(valueRef))
+    Some(IRNot(valueRef))
   }
 
 

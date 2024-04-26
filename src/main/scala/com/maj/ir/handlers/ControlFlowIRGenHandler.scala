@@ -10,13 +10,13 @@ class ControlFlowIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Em
     val ifFalseLabel = irGenerator.nextLabel
 
     val anonCondition = irGenerator.getResultInAnonVar(conditionAssign)
-    emitter.emit(JumpIfNotZero(anonCondition, ifFalseLabel))
+    emitter.emit(IRJumpIf(anonCondition, ifFalseLabel))
     irGenerator.visit(node.ifTrue)
     if (node.elseIfTrue.isEmpty) {
       emitter.emit(ifFalseLabel)
     } else {
       val endLabel = irGenerator.nextLabel
-      emitter.emit(JumpIR(endLabel))
+      emitter.emit(IRJump(endLabel))
       emitter.emit(ifFalseLabel)
       node.elseIfTrue.map(irGenerator.visit)
       emitter.emit(endLabel)
@@ -30,9 +30,9 @@ class ControlFlowIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Em
     emitter.emit(loopLabel)
     val conditionAssign = irGenerator.visit(node.condition)
     val anonCondition = irGenerator.getResultInAnonVar(conditionAssign)
-    emitter.emit(JumpIfNotZero(anonCondition, endLabel))
+    emitter.emit(IRJumpIf(anonCondition, endLabel))
     irGenerator.visit(node.body)
-    emitter.emit(JumpIR(loopLabel))
+    emitter.emit(IRJump(loopLabel))
     emitter.emit(endLabel)
     None
   }

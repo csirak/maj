@@ -2,12 +2,12 @@ func main(): void {
     const x = 20;
     var y = 10;
     var z = x + y;
-    if(y < 15){
+    if(y < 15) {
         y = (y + 1) + (3+y);
+        var d = 123;
     }
     const b = y;
     var a = x + y;
-    y = y + b;
 }
 
 

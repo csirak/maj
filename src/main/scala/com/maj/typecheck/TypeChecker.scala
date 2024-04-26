@@ -4,17 +4,17 @@ import com.maj.Visitor
 import com.maj.ast._
 import com.maj.typecheck.handlers._
 
-class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) extends TypeEnvironment(parent) with Visitor[TypeNode] {
+class TypeChecker(parent: TypeEnvironment = null) extends TypeEnvironment(parent) with Visitor[TypeNode] {
   private val scalarHandler = new ScalarTypeCheckHandler(this)
   private val operatorHandler = new OperatorTypeCheckHandler(this)
   private val variableHandler = new VariableTypeCheckHandler(this)
   private val functionHandler = new FunctionTypeCheckHandler(this)
   private val controlFlowHandler = new ControlFlowTypeCheckHandler(this)
-
   addType("int", MajIntType())
   addType("bool", MajBoolType())
   addType("void", MajVoidType())
   addType("char", MajTypeComposeOr(MajCharType(), MajIntType()))
+
 
   override def visit(node: ASTNode): TypeNode = {
     node match {

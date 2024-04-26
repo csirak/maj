@@ -7,15 +7,19 @@ class IREnviroment(parent: IREnviroment = null) {
   private var labelCounter: Int = 0
   private var anonCount = 0
 
-  def getVar(name: String): IdenIR = {
-    symbolTable.get(name).map(IdenIR).getOrElse(throw new Exception(s"Variable not found: $name"))
+  def getVar(name: String): IRIden = {
+    getOrThrow(symbolTable.get(name).map(IRIden), name)
   }
 
   def getValue(name: String): IRNode = {
-    symbolTable.get(name).map(IdenIR).orElse(constants.get(name)).getOrElse(throw new Exception(s"Variable not found: $name"))
+    getOrThrow(symbolTable.get(name).map(IRIden).orElse(constants.get(name)), name)
   }
 
-  def addVar(name: String): IdenIR = {
+  private def getOrThrow[T <: IRNode](node: Option[T], name: String): T = {
+    node.getOrElse(throw new Exception(s"Variable not found: $name in scope"))
+  }
+
+  def addVar(name: String): IRIden = {
     if (symbolTable.contains(name)) {
       throw new Exception(s"Variable already exists: $name")
     }
@@ -26,28 +30,28 @@ class IREnviroment(parent: IREnviroment = null) {
 
   def addConst(name: String, node: IRNode): Unit = {
     val tableEntry = node match {
-      case node: ScalarIR => node
-      case node: IdenIR => node
+      case node: IRScalar => node
+      case node: IRIden => node
       case _ => throw new Exception("Invalid Constant")
     }
     constants += (name -> tableEntry)
   }
 
 
-  def addAnonVar(): IdenIR = {
+  def addAnonVar(): IRIden = {
 
     anonCount += 1
-    IdenIR(anonCount)
+    IRIden(anonCount)
   }
 
-  def setVar(name: String, newIden: IdenIR): IdenIR = {
+  def setVar(name: String, newIden: IRIden): IRIden = {
     symbolTable += (name -> newIden.symbolIndex)
     newIden
   }
 
-  def nextLabel: LabelIR = {
+  def nextLabel: IRLabel = {
     labelCounter += 1
-    new LabelIR(labelCounter)
+    new IRLabel(labelCounter)
   }
 
 

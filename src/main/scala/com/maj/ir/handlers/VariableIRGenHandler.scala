@@ -2,7 +2,7 @@ package com.maj.ir.handlers
 
 import com.maj.ast._
 import com.maj.emitters.Emitter
-import com.maj.ir.{AssignIR, IRGenerator, IRNode}
+import com.maj.ir.{IRAssign, IRGenerator, IRNode}
 
 
 class VariableIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitter[IRNode]) {
@@ -19,7 +19,7 @@ class VariableIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
     if (namedRef.isEmpty) {
       irGenerator.addConst(node.name, anonRef)
     } else {
-      emitter.emit(AssignIR(namedRef.get, anonRef))
+      emitter.emit(IRAssign(namedRef.get, anonRef))
     }
     None
   }
