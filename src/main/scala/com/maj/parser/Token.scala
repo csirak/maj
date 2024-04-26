@@ -69,6 +69,7 @@ object Token {
   private val DIV: Parser[AstOperator] = clean("\\/").map(_ => Div())
   private val MOD: Parser[AstOperator] = clean("\\%").map(_ => Mod())
 
+  private val MATH = ADD.or(SUB).or(MUL).or(DIV).or(MOD)
 
   // Values
   private val BINARY = clean("0b").and(clean("[01]+")).map(bin => MajInt(Integer.parseInt(bin, 2)))
@@ -180,6 +181,7 @@ object Token {
   expression = sum.or(expression)
   private val comparison = infix(EQUAL.or(List(NEQ, GTOREQ, LTOREQ, GREATER, LESS, AND, OR)), expression)
 
+
   expression = comparison.or(expression)
 
 
@@ -218,7 +220,14 @@ object Token {
     value <- expressionStatement
   } yield ConstVar(name, value)
 
-  private var statement: Parser[ASTNode] = returnStatement.or(List(returnVoidStatement, typeStatement, constStatement, varStatement, expressionStatement))
+  private val opReAssignStatement = for {
+    name <- ID
+    op <- MATH
+    _ <- ASSIGN
+    value <- expressionStatement
+  } yield Assign(name, op.get(Iden(name), value))
+
+  private var statement: Parser[ASTNode] = returnStatement.or(List(returnVoidStatement, typeStatement, constStatement, opReAssignStatement, varStatement, expressionStatement))
 
   private val assignStatement = for {
     name <- ID

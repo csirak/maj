@@ -8,6 +8,7 @@ func main() {
     }
     const b = y;
     var a = x + y;
+    a += y;
 }
 
 
