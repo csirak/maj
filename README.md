@@ -11,7 +11,7 @@ runtime. Built using Scala.
 
 - **Static Typing**: Catch errors early with a strong, statically typed system that ensures type safety without
   sacrificing flexibility.
-- **Performance Optimization**: Automatic performance optimizations using MajIR, reducing the need for manual
+- **Performance Optimization**: Automatic performance optimizations using `MajIR`, reducing the need for manual
   optimization.
 - **Inline Assembly**: Write low-level code directly in the language using inline assembly, enabling fine-grained
   control.
