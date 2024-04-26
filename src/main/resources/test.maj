@@ -1,4 +1,4 @@
-func main(): void {
+func main() {
     const x = 20;
     var y = 10;
     var z = x + y;

@@ -289,7 +289,7 @@ object Token {
     _ <- LEFT_PAREN
     params <- paramsStatement
     _ <- RIGHT_PAREN
-    returnType <- ANNOTATION
+    returnType <- ANNOTATION.or(Parser.constant(MajVoidType()))
     body <- blockStatement(statement)
   } yield Function(name, params.map(_._1), MajFuncType(returnType, params.map(_._2)), body)
 
