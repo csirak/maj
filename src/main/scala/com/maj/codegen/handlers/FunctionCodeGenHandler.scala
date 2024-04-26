@@ -4,8 +4,8 @@ import com.maj.ast._
 import com.maj.codegen._
 import com.maj.emitters.Emitter
 
-class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  def visit(node: Call): Unit = {
+class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter[String]) {
+  def handle(node: Call): Unit = {
     node.args.length match {
       case n if n <= 1 =>
         node.args.foreach(codeGenerator.visit)
@@ -17,23 +17,18 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emitLine(s"jal\t\t${node.callee}")
   }
 
-  def visit(node: AsmBlock): Unit = {
-    node.statements.foreach { line =>
-      val cleaned = cleanAsm(line)
-      if (cleaned.nonEmpty) {
-        if (cleaned.contains(":")) emitter.emit(cleaned) else emitter.emitLine(cleaned)
-      }
-    }
+  def handle(node: AsmBlock): Unit = {
+    node.statements.foreach(emitter.emit)
   }
 
-  def visit(node: Block): Unit = node.statements.foreach(codeGenerator.visit)
+  def handle(node: Block): Unit = node.statements.foreach(codeGenerator.visit)
 
-  def visit(node: Return): Unit = {
+  def handle(node: Return): Unit = {
     codeGenerator.visit(node.term)
     emitter.emit(RiscVTemplates.resetAndReturn)
   }
 
-  def visit(node: Function): Unit = {
+  def handle(node: Function): Unit = {
     if (node.params.length > 7) {
       throw new RuntimeException("Too many arguments")
     }
@@ -69,10 +64,5 @@ class FunctionCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emitLine(s"addi\t\tsp, sp, ${args.length * 8}")
   }
 
-  private def cleanAsm(line: String): String = {
-    val regex = "\\s*(\\S+)\\s*".r
-    val matches = regex.findAllIn(line).matchData.map(_.group(1)).toList
-    if (matches.isEmpty) return ""
-    matches.head + "\t\t" + matches.tail.mkString(" ")
-  }
+
 }

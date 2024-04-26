@@ -4,7 +4,7 @@ import com.maj.ast._
 import com.maj.codegen.{CodeGenerator, RiscVTemplates}
 import com.maj.emitters.Emitter
 
-class OperatorCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
+class OperatorCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter[String]) {
   private def binaryOpPrologue(node: AstOperator): Unit = {
     codeGenerator.visit(node.left)
     emitter.emit(RiscVTemplates.push1("a0"))
@@ -13,78 +13,78 @@ class OperatorCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emit(RiscVTemplates.pop1("a0"))
   }
 
-  def visit(node: Add): Unit = {
+  def handle(node: Add): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("add\t\ta0, a0, a1")
   }
 
-  def visit(node: Sub): Unit = {
+  def handle(node: Sub): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("sub\t\ta0, a0, a1")
   }
 
-  def visit(node: Mul): Unit = {
+  def handle(node: Mul): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("mul\t\ta0, a0, a1")
   }
 
-  def visit(node: Div): Unit = {
+  def handle(node: Div): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("div\t\ta0, a0, a1")
   }
 
-  def visit(node: Mod): Unit = {
+  def handle(node: Mod): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("rem\t\ta0, a0, a1")
   }
 
-  def visit(node: And): Unit = {
+  def handle(node: And): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("snqz\t\ta0, a0")
     emitter.emitLine("snqz\t\ta1, a1")
     emitter.emitLine("and\t\ta0, a0, a1")
   }
 
-  def visit(node: Or): Unit = {
+  def handle(node: Or): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("snqz\t\ta0, a0")
     emitter.emitLine("snqz\t\ta1, a1")
     emitter.emitLine("or\t\ta0, a0, a1")
   }
 
-  def visit(node: Not): Unit = {
-    codeGenerator.visit(node.node)
+  def handle(node: Not): Unit = {
+    codeGenerator.visit(node.value)
     emitter.emitLine("seqz\t\ta0, a0")
   }
 
-  def visit(node: Equals): Unit = {
+  def handle(node: Equals): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("xor\t\ta0, a0, a1")
     emitter.emitLine("seqz\t\ta0, a0")
   }
 
-  def visit(node: NotEquals): Unit = {
+  def handle(node: NotEquals): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("xor\t\ta0, a0, a1")
   }
 
-  def visit(node: LessThan): Unit = {
+  def handle(node: LessThan): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("slt\t\ta0, a0, a1")
   }
 
-  def visit(node: GreaterThan): Unit = {
+  def handle(node: GreaterThan): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("sgt\t\ta0, a0, a1")
   }
 
-  def visit(node: LessThanOrEquals): Unit = {
+  def handle(node: LessThanOrEquals): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("addi\t\ta1, a1, 1")
     emitter.emitLine("slt\t\ta0, a0, a1")
   }
 
-  def visit(node: GreaterThanOrEquals): Unit = {
+  def handle(node: GreaterThanOrEquals): Unit = {
     binaryOpPrologue(node)
     emitter.emitLine("addi\t\ta0, a0, 1")
     emitter.emitLine("sgt\t\ta0, a0, a1")

@@ -4,8 +4,8 @@ import com.maj.ast.{Conditional, Loop}
 import com.maj.codegen.{CodeGenerator, Label}
 import com.maj.emitters.Emitter
 
-class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  def visit(node: Conditional): Unit = {
+class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter[String]) {
+  def handle(node: Conditional): Unit = {
     val ifFalseLabel = Label.next
     val endLabel = Label.next
     codeGenerator.visit(node.condition)
@@ -17,7 +17,7 @@ class ControlFlowCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitt
     emitter.emit(s"$endLabel:")
   }
 
-  def visit(node: Loop): Unit = {
+  def handle(node: Loop): Unit = {
     val conditionLabel = Label.next
     val endLabel = Label.next
     emitter.emit(s"$conditionLabel:")

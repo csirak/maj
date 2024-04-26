@@ -18,43 +18,43 @@ class TypeChecker(val scopeTag: String = "", parent: TypeEnvironment = null) ext
 
   override def visit(node: ASTNode): TypeNode = {
     node match {
-      case (node: Function) => functionHandler.visit(node)
-      case (node: Return) => functionHandler.visit(node)
-      case (node: Block) => functionHandler.visit(node)
-      case (node: Call) => functionHandler.visit(node)
-      case (node: AsmBlock) => functionHandler.visit(node)
+      case (node: Function) => functionHandler.handle(node)
+      case (node: Return) => functionHandler.handle(node)
+      case (node: Block) => functionHandler.handle(node)
+      case (node: Call) => functionHandler.handle(node)
+      case (node: AsmBlock) => functionHandler.handle(node)
 
-      case (node: Add) => operatorHandler.visit(node)
-      case (node: Sub) => operatorHandler.visit(node)
-      case (node: Mul) => operatorHandler.visit(node)
-      case (node: Div) => operatorHandler.visit(node)
-      case (node: Mod) => operatorHandler.visit(node)
+      case (node: Add) => operatorHandler.handle(node)
+      case (node: Sub) => operatorHandler.handle(node)
+      case (node: Mul) => operatorHandler.handle(node)
+      case (node: Div) => operatorHandler.handle(node)
+      case (node: Mod) => operatorHandler.handle(node)
 
-      case (node: LessThan) => operatorHandler.visit(node)
-      case (node: GreaterThan) => operatorHandler.visit(node)
-      case (node: LessThanOrEquals) => operatorHandler.visit(node)
-      case (node: GreaterThanOrEquals) => operatorHandler.visit(node)
+      case (node: LessThan) => operatorHandler.handle(node)
+      case (node: GreaterThan) => operatorHandler.handle(node)
+      case (node: LessThanOrEquals) => operatorHandler.handle(node)
+      case (node: GreaterThanOrEquals) => operatorHandler.handle(node)
 
-      case (node: Not) => operatorHandler.visit(node)
-      case (node: And) => operatorHandler.visit(node)
-      case (node: Or) => operatorHandler.visit(node)
+      case (node: Not) => operatorHandler.handle(node)
+      case (node: And) => operatorHandler.handle(node)
+      case (node: Or) => operatorHandler.handle(node)
 
-      case (node: Equals) => operatorHandler.visit(node)
-      case (node: NotEquals) => operatorHandler.visit(node)
+      case (node: Equals) => operatorHandler.handle(node)
+      case (node: NotEquals) => operatorHandler.handle(node)
 
-      case (node: MajInt) => scalarHandler.visit(node)
-      case (node: MajBool) => scalarHandler.visit(node)
-      case (node: MajNull) => scalarHandler.visit(node)
-      case (node: MajChar) => scalarHandler.visit(node)
+      case (node: MajInt) => scalarHandler.handle(node)
+      case (node: MajBool) => scalarHandler.handle(node)
+      case (node: MajNull) => scalarHandler.handle(node)
+      case (node: MajChar) => scalarHandler.handle(node)
 
-      case (node: Assign) => variableHandler.visit(node)
-      case (node: MutableVar) => variableHandler.visit(node)
-      case (node: Iden) => variableHandler.visit(node)
-      case (node: ConstVar) => variableHandler.visit(node)
-      case (node: TypeDef) => variableHandler.visit(node)
+      case node: Assign => variableHandler.handle(node)
+      case (node: MutableVar) => variableHandler.handle(node)
+      case (node: Iden) => variableHandler.handle(node)
+      case (node: ConstVar) => variableHandler.handle(node)
+      case (node: TypeDef) => variableHandler.handle(node)
 
-      case (node: Conditional) => controlFlowHandler.visit(node)
-      case (node: Loop) => controlFlowHandler.visit(node)
+      case (node: Conditional) => controlFlowHandler.handle(node)
+      case (node: Loop) => controlFlowHandler.handle(node)
     }
   }
 

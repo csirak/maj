@@ -20,25 +20,41 @@ case class AsmBlock(val statements: List[String]) extends ASTNode
 
 case class Function(val name: String, val params: List[String], val signature: MajFuncType, val body: ASTNode) extends ASTNode
 
-case class MajInt(val value: Number) extends ASTNode
 
-case class MajBool(val value: Boolean) extends ASTNode
+sealed trait Scalar extends ASTNode {
+  def value: Any
+}
 
-case class MajNull() extends ASTNode
+case class MajInt(val value: Number) extends Scalar
 
-case class MajChar(val value: Char) extends ASTNode
+case class MajBool(val value: Boolean) extends Scalar
 
-case class Assign(val name: String, val value: ASTNode) extends ASTNode
+case class MajNull() extends Scalar {
+  def value: Null = null
+}
 
-case class MutableVar(val name: String, val value: ASTNode) extends ASTNode
+case class MajChar(val value: Char) extends Scalar
 
-case class ConstVar(val name: String, val value: ASTNode) extends ASTNode
+
+sealed trait Assignable extends ASTNode {
+  def name: String
+
+  def value: ASTNode
+
+}
+
+case class Assign(val name: String, val value: ASTNode) extends Assignable
+
+case class MutableVar(val name: String, val value: ASTNode) extends Assignable
+
+case class ConstVar(val name: String, val value: ASTNode) extends Assignable
+
+// no other forms of type assign so no need to extend Assignable also scala zesty so cant extend a type you pass
+case class TypeDef(val name: String, val value: TypeNode) extends ASTNode
 
 case class Iden(val value: String) extends ASTNode
 
-case class TypeDef(val name: String, val typ: TypeNode) extends ASTNode
-
-case class Not(val node: ASTNode = null) extends ASTNode {
+case class Not(val value: ASTNode = null) extends ASTNode {
   def get(one: ASTNode): ASTNode = Not(one)
 }
 
@@ -48,6 +64,8 @@ abstract class AstOperator extends Operator[ASTNode] with ASTNode {
   def right: ASTNode
 
   def get(left: ASTNode, right: ASTNode): AstOperator
+
+  override def getType: Operator[ASTNode] = get(null, null)
 }
 
 case class Equals(val left: ASTNode = null, val right: ASTNode = null) extends AstOperator {

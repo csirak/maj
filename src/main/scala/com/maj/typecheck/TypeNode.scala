@@ -86,6 +86,8 @@ abstract class TypeOperator extends Operator[TypeNode] with TypeNode {
   def right: TypeNode
 
   def get(left: TypeNode, right: TypeNode): TypeOperator
+
+  override def getType: Operator[TypeNode] = get(null, null)
 }
 
 case class MajTypeComposeOr(left: TypeNode = null, right: TypeNode = null) extends TypeOperator {

@@ -4,7 +4,7 @@ import com.maj.ast._
 import com.maj.typecheck._
 
 class ControlFlowTypeCheckHandler(val typeChecker: TypeChecker) {
-  def visit(node: Conditional): TypeNode = {
+  def handle(node: Conditional): TypeNode = {
     typeChecker.assertType(MajBoolType(), typeChecker.visit(node.condition))
     val trueReturn = typeChecker.visit(node.ifTrue)
     val elseReturn = node.elseIfTrue.map(typeChecker.visit).getOrElse(MajVoidType())
@@ -25,7 +25,7 @@ class ControlFlowTypeCheckHandler(val typeChecker: TypeChecker) {
     }
   }
 
-  def visit(node: Loop): TypeNode = {
+  def handle(node: Loop): TypeNode = {
     typeChecker.assertType(MajBoolType(), typeChecker.visit(node.condition))
     val loopReturn = typeChecker.visit(node.body)
     loopReturn match {

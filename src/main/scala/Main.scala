@@ -1,11 +1,11 @@
 import com.maj.ast.ASTNode
-import com.maj.codegen.CodeGenerator
-import com.maj.emitters.StringBufferEmitter
+import com.maj.emitters.BufferEmitter
+import com.maj.ir.{IRGenerator, IRNode}
 import com.maj.parser._
-import com.maj.typecheck.TypeChecker
 
 
 // TODO: Optimizations IR
+//    TODO: Constants IR
 // TODO: Structs
 // TODO: Pointers & references
 // TODO: Error handling
@@ -22,13 +22,18 @@ object Main {
   }
 
   def compile(file: String, output: String): Unit = {
-    implicit val emitter: StringBufferEmitter = new StringBufferEmitter()
-    val codeGen = new CodeGenerator()
-    val typeCheck = new TypeChecker()
-    val ast: ASTNode = Token.parser.parseWithStdLib(file)
-    typeCheck.visit(ast)
-    codeGen.visit(ast)
-    emitter.writeToFile(s"$output.s")
+    //    implicit val emitter: StringBufferEmitter = new StringBufferEmitter()
+    implicit val irEmitter: BufferEmitter[IRNode] = new BufferEmitter[IRNode]()
+    //    val codeGen = new CodeGenerator()
+    //    val typeCheck = new TypeChecker()
+    val irgen = new IRGenerator()
+    val ast: ASTNode = Token.parser.parseFile(file)
+    //    typeCheck.visit(ast)
+    //    codeGen.visit(ast)
+    irgen.visit(ast)
+
+    irEmitter.output.map(_.toString).map(line => if (line.contains(":")) line else "\t\t" ++ line).foreach(println)
+    //    emitter.writeToFile(s"$output.s")
   }
 }
 

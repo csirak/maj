@@ -4,8 +4,8 @@ import com.maj.ast._
 import com.maj.codegen.{CodeGenerator, RiscVTemplates}
 import com.maj.emitters.Emitter
 
-class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  def visit(node: Assign): Unit = {
+class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter[String]) {
+  def handle(node: Assign): Unit = {
     val offset = codeGenerator.get(node.name)
     if (offset.isEmpty) {
       throw new RuntimeException(s"Variable ${node.name} doesn't exist")
@@ -15,20 +15,20 @@ class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     emitter.emitLine(s"sd\t\ta0, -${offset.get}(fp)")
   }
 
-  def visit(node: MutableVar): Unit = {
+  def handle(node: MutableVar): Unit = {
     throwIfVarExists(node.name)
     codeGenerator.visit(node.value)
     RiscVTemplates.push1("a0")
     codeGenerator.addLocalWithOffset(node.name, 8)
   }
 
-  def visit(node: ConstVar): Unit = {
+  def handle(node: ConstVar): Unit = {
     codeGenerator.visit(node.value)
     RiscVTemplates.push1("a0")
     codeGenerator.addConstant(node.name, node)
   }
 
-  def visit(node: Iden): Unit = {
+  def handle(node: Iden): Unit = {
     val value = codeGenerator.getValue(node.value)
     if (value.isEmpty) {
       throw new RuntimeException(s"Value ${node.value} not found")
@@ -46,5 +46,5 @@ class VariableCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter:
     }
   }
 
-  def visit(node: TypeDef): Unit = {} // Do nothing
+  def handle(node: TypeDef): Unit = {} // Do nothing
 }

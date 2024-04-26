@@ -1,7 +1,7 @@
 package com.maj.emitters
 
-trait Emitter {
-  def emit(output: String): Unit
+trait Emitter[T] {
+  def emit(emitted: T): Unit
 
-  def emitLine(output: String): Unit
+  def emitLine(emitted: T): Unit
 }

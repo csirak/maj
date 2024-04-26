@@ -1,0 +1,11 @@
+package com.maj.ir.handlers
+
+import com.maj.ast._
+import com.maj.emitters.Emitter
+import com.maj.ir.{IRGenerator, IRNode, ScalarIR}
+
+class ScalarIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitter[IRNode]) {
+  def handle(node: Iden): Option[IRNode] = Some(irGenerator.getVar(node.value))
+
+  def handle(node: Scalar): Option[IRNode] = Some(ScalarIR(node))
+}

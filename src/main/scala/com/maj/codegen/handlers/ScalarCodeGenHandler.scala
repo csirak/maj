@@ -4,20 +4,20 @@ import com.maj.ast.{MajBool, MajChar, MajInt, MajNull}
 import com.maj.codegen.CodeGenerator
 import com.maj.emitters.Emitter
 
-class ScalarCodeGenHandler(val codeGenerator: CodeGenerator)(implicit emitter: Emitter) {
-  def visit(node: MajInt): Unit = {
+class ScalarCodeGenHandler(codeGenerator: CodeGenerator)(implicit emitter: Emitter[String]) {
+  def handle(node: MajInt): Unit = {
     emitter.emitLine(s"li\t\ta0, ${node.value}")
   }
 
-  def visit(node: MajBool): Unit = {
+  def handle(node: MajBool): Unit = {
     emitter.emitLine(s"li\t\ta0, ${if (node.value) 1 else 0}")
   }
 
-  def visit(node: MajNull): Unit = {
+  def handle(node: MajNull): Unit = {
     emitter.emitLine("li\t\ta0, 0")
   }
 
-  def visit(node: MajChar): Unit = {
+  def handle(node: MajChar): Unit = {
     emitter.emitLine(s"li\t\ta0, '${node.value}'")
   }
 }

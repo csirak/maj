@@ -1,67 +1,77 @@
 package com.maj.ir
 
+import com.maj.ast._
+
 
 sealed trait IRNode
 
 
-abstract class Scalar extends IRNode
-
-case class IntIR(val value: Number) extends Scalar
-
-case class BoolIR(val value: Boolean) extends Scalar
-
-case class NullIR() extends Scalar
-
-case class CharIR(val value: Char) extends Scalar
-
-case class IdenIR(val name: String) extends IRNode
-
-case class BlockIR(val statements: List[IRNode]) extends IRNode
-
-case class AssignIR(val name: String, val value: IRNode) extends IRNode
-
-case class CallIR(val callee: String, val args: List[IdenIR]) extends IRNode
-
-case class FuncIR(val name: String, val params: List[IdenIR], val body: BlockIR) extends IRNode
-
-case class ReturnIR(val term: IRNode) extends IRNode
-
-case class ConditionalJumpIR(val condition: IRNode, val ifTrue: IRNode) extends IRNode
-
-
-abstract class IRBinaryOperator extends IRNode {
-  def left: IdenIR
-
-  def right: IdenIR
+case class NullIR() extends IRNode {
+  override def toString: String = "null"
 }
 
-case class NotIR(val node: IdenIR) extends IRNode
+case class ScalarIR(value: Scalar) extends IRNode {
+  override def toString: String = value.value.toString
+}
 
-case class EqualsIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class IdenIR(val symbolIndex: Int) extends IRNode {
+  override def toString: String = s"t$symbolIndex"
+}
 
-case class AndIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class NotIR(val value: IdenIR) extends IRNode {
+  override def toString: String = s"!$value"
+}
 
-case class OrIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class LabelIR(val value: Int) extends IRNode {
+  override def toString: String = s".L$value:"
+}
 
-case class AddIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class JumpIfNotZero(val condition: IdenIR, val label: LabelIR) extends IRNode {
+  override def toString: String = s"beqz $condition $label"
+}
 
-case class SubIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class JumpIR(val label: LabelIR) extends IRNode {
+  override def toString: String = s"jump $label"
+}
 
-case class MulIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class AssignIR(val iden: IdenIR, val value: IRNode) extends IRNode {
+  override def toString: String = s"$iden = $value"
+}
 
-case class DivIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class CallIR(val callee: String, val args: List[IdenIR]) extends IRNode {
+  override def toString: String = s"call $callee(${args.mkString(", ")})"
+}
 
-case class ModIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class FuncIR(val name: String) extends IRNode {
+  override def toString: String = s"func $name:"
+}
 
-case class LessIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
-
-case class GreaterIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
-
-case class LessEqIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
-
-case class GreaterEqIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
-
-case class NotEqIR(val left: IdenIR, val right: IdenIR) extends IRBinaryOperator
+case class ReturnIR(val term: IRNode) extends IRNode {
+  override def toString: String = s"return $term"
+}
 
 
+case class ASMBlockIR(val statements: List[String]) extends IRNode {
+  override def toString: String = "\n" ++ statements.mkString("\n")
+}
 
+case class WrappedOperatorIR(val operator: Operator[ASTNode], left: IRNode, right: IRNode) extends IRNode {
+  override def toString: String = {
+    val opStr = operator match {
+      case n: Add => "+"
+      case n: Sub => "-"
+      case n: Mul => "*"
+      case n: Div => "/"
+      case n: Mod => "%"
+      case n: Equals => "=="
+      case n: NotEquals => "!="
+      case n: LessThan => "<"
+      case n: LessThanOrEquals => "<="
+      case n: GreaterThan => ">"
+      case n: GreaterThanOrEquals => ">="
+      case n: And => "&&"
+      case n: Or => "||"
+    }
+    s"$left $opStr $right"
+  }
+}

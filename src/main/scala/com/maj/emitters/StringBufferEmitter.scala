@@ -2,18 +2,12 @@ package com.maj.emitters
 
 import java.io.PrintWriter
 
-class StringBufferEmitter extends Emitter {
-  private var buffer = List.empty[String]
-
-  def emit(output: String): Unit = {
-    buffer = buffer :+ output
-  }
-
-  def emitLine(output: String): Unit = buffer = buffer :+ (s"\t\t$output")
+class StringBufferEmitter extends BufferEmitter[String] {
+  override def transform(output: String): String = s"\t\t$output"
 
   def writeToFile(fileName: String): PrintWriter = {
     new PrintWriter(fileName) {
-      write(buffer.mkString("\n"));
+      write(output.mkString("\n"));
       close()
     }
   }

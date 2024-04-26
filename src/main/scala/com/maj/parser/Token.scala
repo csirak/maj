@@ -158,7 +158,7 @@ object Token {
 
   expression = unary.or(expression)
 
-  private def infix[T, O <: Operator[T]](operator: Parser[O], operand: Parser[T]): Parser[T] = {
+  private def infix[T](operator: Parser[Operator[T]], operand: Parser[T]): Parser[T] = {
     val repeatedOps = for {
       op <- operator
       exp <- operand
@@ -263,7 +263,7 @@ object Token {
     asm <- LINE
     _ <- RIGHT_CURLY
 
-  } yield AsmBlock(asm.stripMargin.split("\n").toList)
+  } yield AsmBlock(asm.stripMargin.split("\n").toList.map(cleanAsm))
 
   statement = asmStatement.or(statement)
 
@@ -303,4 +303,11 @@ object Token {
   } yield Block(block)
 
 
+  private def cleanAsm(line: String): String = {
+    val regex = "\\s*(\\S+)\\s*".r
+    val matches = regex.findAllIn(line).matchData.map(_.group(1)).toList
+    if (matches.isEmpty) return ""
+    val out = matches.head + "\t\t" + matches.tail.mkString(" ")
+    if (out.contains(":")) out else "\t\t" + out
+  }
 }

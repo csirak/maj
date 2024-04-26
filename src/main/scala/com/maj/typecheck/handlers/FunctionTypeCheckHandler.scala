@@ -4,7 +4,7 @@ import com.maj.ast._
 import com.maj.typecheck._
 
 class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
-  def visit(node: Function): TypeNode = {
+  def handle(node: Function): TypeNode = {
     typeChecker.addType(node.name, node.signature)
     val localTypeCheck = new TypeChecker(node.name, typeChecker)
     val argTypes = node.signature.params
@@ -19,7 +19,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     node.signature
   }
 
-  def visit(node: Call): TypeNode = {
+  def handle(node: Call): TypeNode = {
     val expected = typeChecker.getType(node.callee)
     if (expected.isEmpty) {
       throw new RuntimeException(s"Function ${node.callee} not found")
@@ -33,7 +33,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     typeChecker.getOrThrow(func.returnType.toString)
   }
 
-  def visit(node: Return): TypeNode = {
+  def handle(node: Return): TypeNode = {
     val nodeType = typeChecker.visit(node.term)
     val expectedScope = typeChecker.getType(typeChecker.scopeTag)
     expectedScope match {
@@ -44,7 +44,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
   }
 
 
-  def visit(node: Block): TypeNode = {
+  def handle(node: Block): TypeNode = {
     val returns = node.statements.flatMap(stmt => typeChecker.visit(stmt) match {
       case ret@(MajReturnType(_) | MajConditionalReturn(_)) => Some(ret)
       case _ => None
@@ -63,7 +63,7 @@ class FunctionTypeCheckHandler(val typeChecker: TypeChecker) {
     MajReturnType(out)
   }
 
-  def visit(node: AsmBlock): TypeNode = {
+  def handle(node: AsmBlock): TypeNode = {
     println("WARNING: ASM block not type checked")
     MajVoidType()
   }
