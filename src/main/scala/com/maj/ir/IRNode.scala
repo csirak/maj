@@ -27,7 +27,7 @@ case class LabelIR(val value: Int) extends IRNode {
 }
 
 case class JumpIfNotZero(val condition: IdenIR, val label: LabelIR) extends IRNode {
-  override def toString: String = s"beqz $condition $label"
+  override def toString: String = s"bneqz $condition $label"
 }
 
 case class JumpIR(val label: LabelIR) extends IRNode {
