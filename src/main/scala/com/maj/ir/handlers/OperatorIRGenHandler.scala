@@ -10,15 +10,13 @@ class OperatorIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
     val right = irGenerator.visit(node.right)
     val leftRef = irGenerator.getResultInAnonOrScalar(left)
     val rightRef = irGenerator.getResultInAnonOrScalar(right)
-    val anonRef = irGenerator.assignToAnonVarAndEmit(WrappedOperatorIR(node.getType, leftRef, rightRef))
-    Some(anonRef)
+    Some(WrappedOperatorIR(node.getType, leftRef, rightRef))
   }
 
   def handle(node: Not): Option[IRNode] = {
     val value = irGenerator.visit(node.value)
     val valueRef = irGenerator.getResultInAnonOrScalar(value)
-    val anonRef = irGenerator.assignToAnonVarAndEmit(NotIR(valueRef))
-    Some(anonRef)
+    Some(NotIR(valueRef))
   }
 
 

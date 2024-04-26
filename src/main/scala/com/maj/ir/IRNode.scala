@@ -11,11 +11,17 @@ case class NullIR() extends IRNode {
 }
 
 case class ScalarIR(value: Scalar) extends IRNode {
-  override def toString: String = if (value.value == null) "null" else value.value.toString
+  //  override def toString: String = if (value.value == null) "null" else value.value.toString
+  override def toString: String = value match {
+    case MajNull() => "null"
+    case MajChar(value) => s"'$value'"
+    case _ => s"${value.value}"
+  }
+
 }
 
 case class IdenIR(val symbolIndex: Int) extends IRNode {
-  override def toString: String = s"t$symbolIndex"
+  override def toString: String = s"v$symbolIndex"
 }
 
 case class NotIR(val value: IRNode) extends IRNode {
@@ -23,15 +29,17 @@ case class NotIR(val value: IRNode) extends IRNode {
 }
 
 case class LabelIR(val value: Int) extends IRNode {
-  override def toString: String = s".L$value:"
+  override def toString: String = s"$toCall:"
+
+  def toCall: String = s".L$value"
 }
 
 case class JumpIfNotZero(val condition: IdenIR, val label: LabelIR) extends IRNode {
-  override def toString: String = s"bneqz $condition $label"
+  override def toString: String = s"jump if($condition) ${label.toCall}"
 }
 
 case class JumpIR(val label: LabelIR) extends IRNode {
-  override def toString: String = s"jump $label"
+  override def toString: String = s"jump ${label.toCall}"
 }
 
 case class AssignIR(val iden: IdenIR, val value: IRNode) extends IRNode {
@@ -42,17 +50,17 @@ case class CallIR(val callee: String, val args: List[IdenIR]) extends IRNode {
   override def toString: String = s"call $callee(${args.mkString(", ")})"
 }
 
-case class FuncIR(val name: String) extends IRNode {
-  override def toString: String = s"func $name:"
+case class FuncIR(val name: String, val params: List[IdenIR]) extends IRNode {
+  override def toString: String = s"func $name (${params.mkString(", ")}):"
 }
 
 case class ReturnIR(val term: IRNode) extends IRNode {
-  override def toString: String = s"return $term"
+  override def toString: String = s"return $term\n"
 }
 
 
 case class ASMBlockIR(val statements: List[String]) extends IRNode {
-  override def toString: String = "asm { \n" ++ statements.mkString("\n") ++ "}"
+  override def toString: String = "\t\tasm { \n\t\t" ++ statements.mkString("\n\t\t") ++ "}"
 }
 
 case class WrappedOperatorIR(val operator: Operator[ASTNode], left: IRNode, right: IRNode) extends IRNode {

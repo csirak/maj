@@ -8,10 +8,19 @@ class ControlFlowIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Em
   def handle(node: Conditional): Option[IRNode] = {
     val conditionAssign = irGenerator.visit(node.condition)
     val ifFalseLabel = irGenerator.nextLabel
+
     val anonCondition = irGenerator.getResultInAnonVar(conditionAssign)
     emitter.emit(JumpIfNotZero(anonCondition, ifFalseLabel))
     irGenerator.visit(node.ifTrue)
-    emitter.emit(ifFalseLabel)
+    if (node.elseIfTrue.isEmpty) {
+      emitter.emit(ifFalseLabel)
+    } else {
+      val endLabel = irGenerator.nextLabel
+      emitter.emit(JumpIR(endLabel))
+      emitter.emit(ifFalseLabel)
+      node.elseIfTrue.map(irGenerator.visit)
+      emitter.emit(endLabel)
+    }
     None
   }
 

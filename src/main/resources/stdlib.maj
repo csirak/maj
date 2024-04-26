@@ -14,6 +14,7 @@ func putchar(letter: char): void {
 func assert(cond: bool): void {
     if (cond) {
         putchar('.');
-        return;
+    } else {
+        putchar('F');
     }
 }

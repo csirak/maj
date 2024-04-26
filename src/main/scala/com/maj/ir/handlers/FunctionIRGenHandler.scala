@@ -6,8 +6,8 @@ import com.maj.ir._
 
 class FunctionIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitter[IRNode]) {
   def handle(node: Function): Option[IRNode] = {
-    node.params.foreach(irGenerator.addVar)
-    emitter.emit(FuncIR(node.name))
+    val params = node.params.map(irGenerator.addVar)
+    emitter.emit(FuncIR(node.name, params))
     irGenerator.visit(node.body)
     emitter.emit(ReturnIR(NullIR()))
     None
@@ -21,7 +21,7 @@ class FunctionIRGenHandler(val irGenerator: IRGenerator)(implicit emitter: Emitt
 
   def handle(node: Return): Option[IRNode] = {
     val term = irGenerator.visit(node.term)
-    val result = irGenerator.getResultInAnonVar(term)
+    val result = irGenerator.getResultInAnonOrScalar(term)
     emitter.emit(ReturnIR(result))
     None
   }
