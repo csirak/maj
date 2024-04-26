@@ -1,6 +1,8 @@
 # Default ignored files
 /shelf/
 **/.idea/
+**/.bsp
+
 # Editor-based HTTP Client requests
 /httpRequests/
 # Datasource local storage ignored files
