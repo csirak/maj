@@ -2,10 +2,7 @@
 
 ## Overview
 
-Maj is a high-performance, statically typed programming language designed to leverage GPU computing capabilities
-seamlessly. Inspired by [Adam Majmudar's GPU project](https://github.com/adam-maj/tiny-gpu), Maj aims to simplify the
-development of GPU-accelerated applications by integrating GPU programming directly into the language syntax and
-runtime. Built using Scala.
+Maj is a high-performance, statically typed programming language. Inspired by [Adam Majmudar's GPU project](https://github.com/adam-maj/tiny-gpu) and built using Scala.
 
 ## Features
 
